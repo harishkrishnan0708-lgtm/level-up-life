@@ -1,0 +1,148 @@
+/* Planning the week: which days each quest is on, and quests of your own */
+
+.planner-header h1 {
+  margin: 2px 0 6px;
+  font-size: 26px;
+}
+
+.planner-kicker {
+  margin: 0;
+  color: var(--blood-bright);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.planner-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.planner-card {
+  margin-top: 16px;
+  padding: 12px 10px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.planner-card h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.week-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.week-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(7, 28px);
+  align-items: center;
+  gap: 3px;
+}
+
+/* Names wrap onto two lines rather than being cut off, so every quest stays recognisable. */
+.week-quest {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.week-head .week-quest,
+.week-day-label {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.week-head .week-quest {
+  text-align: left;
+}
+
+.week-cell {
+  width: 28px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid var(--border);
+  background: var(--bg);
+}
+
+.week-cell.on {
+  border-color: #a87a1e;
+  background: var(--ember);
+  box-shadow:
+    inset 2px 2px 0 rgb(255 255 255 / 0.3),
+    inset -2px -2px 0 rgb(0 0 0 / 0.25);
+}
+
+.quest-form {
+  display: grid;
+  gap: 10px;
+}
+
+.quest-form label,
+.quest-form legend {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.quest-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.plan-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.plan-choice {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--border);
+  background: var(--surface-raised);
+  font-size: 14px;
+}
+
+.plan-choice.chosen {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+.planner-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+/* The way into the planner, on the quest board */
+
+.plan-banner {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--ember);
+  background: var(--surface);
+  text-align: left;
+}
+
+.plan-banner strong {
+  color: var(--ember);
+}
+
+.plan-banner span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.plan-edit {
+  display: block;
+  margin: 16px auto 0;
+}

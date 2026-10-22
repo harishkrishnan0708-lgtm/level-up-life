@@ -1,0 +1,21 @@
+.typed-text {
+  display: block;
+  width: 100%;
+  min-height: 4.2em;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

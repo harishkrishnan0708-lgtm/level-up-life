@@ -1,0 +1,277 @@
+.rarity-text-common {
+  color: var(--rarity-common);
+}
+
+.rarity-text-uncommon {
+  color: var(--rarity-uncommon);
+}
+
+.rarity-text-rare {
+  color: var(--rarity-rare);
+}
+
+.rarity-text-epic {
+  color: var(--rarity-epic);
+}
+
+.rarity-text-legendary {
+  color: var(--rarity-legendary);
+}
+
+.pet-icon {
+  font-size: 14px;
+}
+
+.pet-sprite {
+  display: block;
+  width: 2.3em;
+  height: 2.3em;
+}
+
+/* Menagerie screen */
+
+.menagerie-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.menagerie-count {
+  margin: 4px 0 14px;
+  color: var(--muted);
+}
+
+.active-pet {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.active-pet.rarity-epic {
+  border-color: var(--rarity-epic);
+}
+
+.active-pet.rarity-legendary {
+  border-color: var(--rarity-legendary);
+  background: #221a10;
+}
+
+.active-pet-icon {
+  font-size: 20px;
+}
+
+.active-pet p {
+  margin: 0;
+}
+
+.active-pet-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.active-pet-name {
+  font-family: var(--heading-font);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.active-pet-bonus {
+  color: var(--ember);
+  font-weight: 600;
+}
+
+.active-pet-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.nest,
+.pet-group {
+  margin-top: 22px;
+}
+
+.nest h3,
+.pet-group h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pet-group-odds {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.nest-empty,
+.nest-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.nest-hint {
+  margin-top: 8px;
+}
+
+.egg-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.egg-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.egg-row-icon {
+  flex: none;
+  width: 40px;
+  height: 50px;
+}
+
+.egg-row-text {
+  flex: 1;
+}
+
+.egg-row-text p {
+  margin: 0;
+}
+
+.egg-rarity {
+  font-weight: 700;
+}
+
+.warmth-bar {
+  height: 8px;
+  margin: 6px 0 4px;
+  border-radius: 0;
+  background: #080605;
+  overflow: hidden;
+}
+
+.warmth-fill {
+  height: 100%;
+  background: var(--ember);
+  transition: width 0.4s ease;
+}
+
+.egg-progress {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.egg-legendary {
+  filter: drop-shadow(0 2px 0 rgb(240 184 74 / 0.8));
+}
+
+.egg-epic {
+  filter: drop-shadow(0 2px 0 rgb(176 122 232 / 0.7));
+}
+
+.pet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pet-card {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+}
+
+.pet-card p {
+  margin: 0;
+}
+
+.pet-card.rarity-epic:not(.unfound) {
+  border-color: rgb(176 122 232 / 0.6);
+}
+
+.pet-card.rarity-legendary:not(.unfound) {
+  border-color: var(--rarity-legendary);
+  background: #221a10;
+}
+
+.pet-name {
+  font-weight: 700;
+}
+
+.pet-card.unfound .pet-name {
+  color: var(--muted);
+}
+
+.pet-bonus {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pet-count {
+  color: var(--ember);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.follow-button {
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 0 14px;
+  border-radius: 0;
+  border: 2px solid var(--ember);
+  background: transparent;
+  color: var(--ember);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.follow-button.following {
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+}
+
+.test-luck {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 28px;
+  padding: 12px;
+  border-radius: 0;
+  border: 1px dashed #5b7bb0;
+  color: #b9cff2;
+  font-size: 13px;
+}
+
+.test-luck input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: none;
+}
+

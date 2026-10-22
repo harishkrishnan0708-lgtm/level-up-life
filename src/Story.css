@@ -1,0 +1,223 @@
+/* The Chronicle on the War screen */
+
+.chronicle {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 2px solid #6b4a2e;
+  background: #1c140f;
+  box-shadow:
+    inset 3px 3px 0 rgb(255 255 255 / 0.04),
+    inset -3px -3px 0 rgb(0 0 0 / 0.35);
+}
+
+.chronicle h3 {
+  margin: 0;
+  color: var(--ember);
+  font-size: 20px;
+}
+
+.chronicle-hint {
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.chapter-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chapter-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  background: var(--surface-raised);
+  text-align: left;
+}
+
+.chapter-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.chapter-new .chapter-button {
+  border-color: var(--ember);
+}
+
+.chapter-number {
+  flex: none;
+  width: 28px;
+  color: var(--ember);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.chapter-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.chapter-title {
+  font-weight: 700;
+}
+
+.chapter-unlock {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.chapter-status {
+  flex: none;
+  padding: 2px 6px;
+  border: 2px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.chapter-status.status-new {
+  border-color: var(--ember);
+  background: var(--ember);
+  color: #1a1008;
+}
+
+.chapter-retake {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* The reader: a visual novel over the whole screen */
+
+.story-reader {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: #0d0908;
+}
+
+.story-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.story-header h2 {
+  margin: 2px 0 0;
+  color: var(--ember);
+  font-size: 22px;
+}
+
+.story-act {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.story-close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 2px solid var(--border);
+  background: var(--surface-raised);
+  font-size: 18px;
+}
+
+.story-stage {
+  display: grid;
+  flex: 1;
+  place-items: end center;
+  min-height: 140px;
+  padding-bottom: 12px;
+}
+
+.story-portrait {
+  display: block;
+  width: min(48vw, 200px);
+  height: min(48vw, 200px);
+  border: 3px solid #8a7034;
+  background: #1e110e;
+  box-shadow: 0 0 0 3px #2a1e12;
+}
+
+.story-box {
+  min-height: 180px;
+  padding: 14px 16px;
+  border: 3px solid #8a7034;
+  background: rgb(20 14 10 / 0.97);
+  box-shadow:
+    inset 0 0 0 3px #120c09,
+    inset 0 0 0 4px #3a2a1c;
+}
+
+.story-narration .typed-text {
+  color: #d8c8a8;
+  font-style: italic;
+}
+
+.story-speaker {
+  margin: 0 0 6px;
+  color: var(--ember);
+  font-weight: 700;
+}
+
+.story-next {
+  display: block;
+  margin: 10px 0 0 auto;
+}
+
+.story-next:disabled {
+  opacity: 0.4;
+}
+
+.story-prompt {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.story-options {
+  display: grid;
+  gap: 8px;
+}
+
+.story-options .button-secondary {
+  min-height: 48px;
+  text-align: left;
+}
+
+.story-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.story-end {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.story-end h3 {
+  margin: 0 0 8px;
+  color: var(--ember);
+  font-size: 28px;
+}
+
+.story-chose {
+  margin: 0;
+}

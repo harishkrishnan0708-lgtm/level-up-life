@@ -1,0 +1,84 @@
+.kingdom-header h2 {
+  margin: 0;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.kingdom-stats {
+  margin: 4px 0 14px;
+  color: var(--muted);
+}
+
+.kingdom-map {
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 0;
+  border: 2px solid #3a2a1c;
+  background: #151d12;
+}
+
+.kingdom-row {
+  display: grid;
+  /* minmax(0, 1fr) lets columns shrink below their label's width, so the map never overflows on a phone. */
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.tile {
+  min-width: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgb(60 80 45 / 0.25);
+}
+
+.tile-edge {
+  background: rgb(40 32 24 / 0.6);
+}
+
+.tile-road {
+  background: rgb(120 96 70 / 0.35);
+}
+
+.tile-built {
+  background: rgb(80 60 40 / 0.45);
+  box-shadow: inset 0 0 0 1px rgb(224 164 58 / 0.15);
+}
+
+.tile-selected {
+  box-shadow: inset 0 0 0 2px var(--ember);
+}
+
+.tile-sprite {
+  width: 88%;
+  height: 88%;
+}
+
+.gate {
+  width: 60%;
+  height: 70%;
+  border-radius: 0;
+  border: 2px solid #6a5238;
+  background: #1a120b;
+}
+
+.kingdom-caption {
+  min-height: 3em;
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+.kingdom-caption strong {
+  color: var(--text);
+}
+
+.kingdom-empty {
+  margin-top: 16px;
+  text-align: center;
+  color: var(--muted);
+}

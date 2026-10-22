@@ -1,0 +1,81 @@
+.emblem {
+  --emblem-color: var(--rarity-common);
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.6em;
+  height: 2.6em;
+  padding: 0 0.4em;
+  border-radius: 0;
+  border: 2px solid var(--emblem-color);
+  background: color-mix(in srgb, var(--emblem-color) 16%, #0d0907);
+  color: var(--emblem-color);
+  font-family: var(--heading-font);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.6);
+  /* Keeps the aura's negative z-index inside the emblem, so card backgrounds can't hide it. */
+  isolation: isolate;
+}
+
+.emblem-text {
+  position: relative;
+}
+
+.emblem-uncommon {
+  --emblem-color: var(--rarity-uncommon);
+}
+
+.emblem-rare {
+  --emblem-color: var(--rarity-rare);
+}
+
+.emblem-epic {
+  --emblem-color: var(--rarity-epic);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.6),
+    0 0 0 2px rgb(176 122 232 / 0.6);
+}
+
+.emblem-legendary {
+  --emblem-color: var(--rarity-legendary);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.6),
+    0 0 0 2px rgb(240 184 74 / 0.7);
+}
+
+.emblem-ember {
+  --emblem-color: var(--ember);
+}
+
+.emblem-blood {
+  --emblem-color: var(--blood-bright);
+}
+
+.emblem-unknown {
+  --emblem-color: #4a3f36;
+  color: #6f6352;
+}
+
+.emblem-aura {
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgb(240 184 74 / 0.5), transparent 30%, rgb(255 236 180 / 0.35), transparent 60%, rgb(240 184 74 / 0.5), transparent);
+  filter: blur(4px);
+  animation: emblem-aura-turn 6s linear infinite;
+  z-index: -1;
+}
+
+@keyframes emblem-aura-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emblem-aura {
+    animation: none;
+  }
+}

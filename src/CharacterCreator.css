@@ -1,0 +1,248 @@
+.creator-preview {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: calc(-1 * (env(safe-area-inset-top) + 16px)) -16px 0;
+  padding: calc(env(safe-area-inset-top) + 14px) 16px 14px;
+  border-bottom: 2px solid var(--border);
+  background: rgb(12 9 8 / 0.94);
+}
+
+.creator-portraits {
+  flex: none;
+  display: flex;
+  gap: 8px;
+}
+
+.creator-portraits figure {
+  margin: 0;
+  text-align: center;
+}
+
+.creator-portraits figcaption {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.creator-portrait {
+  display: block;
+  width: 84px;
+  height: 84px;
+  border-radius: 0;
+  border: 3px solid var(--ember);
+  background: #1e110e;
+  box-shadow: 0 0 0 2px rgb(224 164 58 / 0.25);
+}
+
+.creator-kicker {
+  margin: 0;
+  color: var(--blood-bright);
+  font-family: var(--heading-font);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.creator-preview h1 {
+  margin: 2px 0;
+  font-size: 22px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.creator-class {
+  margin: 0;
+  color: var(--ember);
+  font-weight: 600;
+}
+
+.creator-section {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.creator-section h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--heading-font);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.optional {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.text-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  /* 16px stops iPhone Safari from zooming in when the field is focused. */
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.text-input[aria-invalid='true'] {
+  border-color: var(--warning);
+}
+
+.field-error {
+  min-height: 1.2em;
+  margin: 4px 0 0;
+  color: var(--warning);
+  font-size: 14px;
+}
+
+.char-count {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+.picker {
+  margin: 14px 0 0;
+  padding: 0;
+  border: none;
+}
+
+.creator-section h2 + .picker {
+  margin-top: 0;
+}
+
+.picker legend {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.picker-selected {
+  color: var(--ember);
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.picker-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+}
+
+.swatch[aria-checked='true'] {
+  border-color: var(--ember);
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--ember);
+}
+
+.chip {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--surface-raised);
+  font-size: 14px;
+}
+
+.chip[aria-checked='true'] {
+  border-color: var(--ember);
+  background: #3a2210;
+  color: var(--ember);
+  font-weight: 700;
+}
+
+.class-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.class-card {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border-radius: 0;
+  border: 2px solid var(--border);
+  background: var(--surface-raised);
+  text-align: center;
+}
+
+.class-card[aria-checked='true'] {
+  border-color: var(--ember);
+  background: #2e1a0f;
+  box-shadow: 0 0 0 2px rgb(224 164 58 / 0.25);
+}
+
+.class-name {
+  font-family: var(--heading-font);
+  font-weight: 700;
+}
+
+.class-blurb {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.creator-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.creator-actions .button-primary {
+  flex: 1;
+}
+
+.chip.premium {
+  border-color: #8a6a2a;
+}
+
+.chip.locked {
+  border-style: dashed;
+  background: transparent;
+  color: #6f6352;
+  cursor: not-allowed;
+}
+
+.gear-hint {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
