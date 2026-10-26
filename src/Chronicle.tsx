@@ -4,6 +4,9 @@ import type { Hero } from './hero'
 import { PRACTICE_RIVAL } from './raids'
 import { CHAPTERS, chapterStatus, unlockHint, type Chapter } from './story'
 import StoryReader from './StoryReader'
+import { bestStreakSoFar } from './streak'
+
+const ROMAN_ACTS = ['', 'I', 'II', 'III']
 
 const STATUS_LABELS = { new: 'New', read: 'Read', unwritten: 'Being written', locked: 'Locked' } as const
 
@@ -19,7 +22,8 @@ interface ChronicleProps {
 function Chronicle({ hero, onChoose, onFinish, onRetakeFort }: ChronicleProps) {
   const [reading, setReading] = useState<Chapter | null>(null)
   // Show the chapters opened so far and the next locked one, so the story's shape stays a surprise.
-  const statuses = CHAPTERS.map((chapter) => chapterStatus(chapter, hero.war, hero.story))
+  const bestStreak = bestStreakSoFar(hero.streak, hero.game, hero.plan)
+  const statuses = CHAPTERS.map((chapter) => chapterStatus(chapter, hero.war, hero.story, bestStreak))
   const firstLocked = statuses.indexOf('locked')
   const shown = firstLocked === -1 ? CHAPTERS : CHAPTERS.slice(0, firstLocked + 1)
 
@@ -34,10 +38,10 @@ function Chronicle({ hero, onChoose, onFinish, onRetakeFort }: ChronicleProps) {
           return (
             <li key={chapter.id} className={`chapter chapter-${status}`}>
               <button type="button" className="chapter-button" disabled={!readable} onClick={() => setReading(chapter)}>
-                <span className="chapter-number">{chapter.number}</span>
+                <span className="chapter-number">{chapter.interlude ? '✦' : chapter.number}</span>
                 <span className="chapter-text">
                   <span className="chapter-title">{status === 'locked' ? '???' : chapter.title}</span>
-                  <span className="chapter-unlock">{status === 'locked' ? `${unlockHint(chapter)} to unlock` : `Act ${chapter.act}`}</span>
+                  <span className="chapter-unlock">{status === 'locked' ? `${unlockHint(chapter, hero.war, hero.story, bestStreak)} to unlock` : chapter.interlude ? `Act ${chapter.act} · an interlude` : `Act ${chapter.act}`}</span>
                 </span>
                 <span className={`chapter-status status-${status}`}>{STATUS_LABELS[status]}</span>
               </button>
@@ -50,6 +54,9 @@ function Chronicle({ hero, onChoose, onFinish, onRetakeFort }: ChronicleProps) {
           )
         })}
       </ol>
+      {firstLocked === -1 && statuses.every((status) => status === 'read') && (
+        <p className="chronicle-hint">That’s the end of Act {ROMAN_ACTS[CHAPTERS.at(-1)!.act]}. The next act is still being written.</p>
+      )}
       {reading && (
         <StoryReader
           key={reading.id}

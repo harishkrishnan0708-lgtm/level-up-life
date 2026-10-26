@@ -8,6 +8,7 @@ import {
   STALL_LANTERN_SPOT,
   STRING_LANTERN_SPOTS,
   WICK_EYES,
+  WICK_HANDS,
   dayPhase,
   isLamplit,
   paintFarStreet,
@@ -16,6 +17,7 @@ import {
   paintStallLantern,
   paintStringLantern,
   paintTownsperson,
+  paintWickGlove,
   type DayPhase,
   type Townsperson,
 } from './marketPixels'
@@ -36,6 +38,8 @@ const PASSERSBY: readonly (Townsperson & { lane: number; duration: number; delay
   { extra: 'basket', cloak: '#3e2a1c', lane: 2, duration: 26, delay: -4, reverse: false },
   { extra: 'none', cloak: '#3e1e1e', lane: 4, duration: 30, delay: -12, reverse: false },
 ]
+
+const WICK_GLOVE = toRuns(paintWickGlove())
 
 /** Where each moth circles the stall lantern, in pixels from its middle, and how far into its loop it starts. */
 const LANTERN_MOTHS = [
@@ -163,6 +167,13 @@ function MarketScene({ merchantPleased }: MarketSceneProps) {
         <g key={x} className={lamplit ? (index % 2 ? 'flicker' : 'flicker-slow') : undefined}>
           {lamplit && <Glow cx={x} cy={y + 3} radii={[6, 4]} />}
           <Pixels runs={sprites.stringLantern} x={(x - 2) * MARKET_PIXEL} y={y * MARKET_PIXEL} />
+        </g>
+      ))}
+
+      {/* Wick's gloved hands on the counter; now and then he rubs them together, pleased with himself */}
+      {WICK_HANDS.map(([x, y], index) => (
+        <g key={x} className={index ? 'glove-right' : 'glove-left'}>
+          <Pixels runs={WICK_GLOVE} x={(x - 6) * MARKET_PIXEL} y={(y - 4) * MARKET_PIXEL} />
         </g>
       ))}
 

@@ -1,0 +1,114 @@
+/* The hero's journal: pages of story, people, and the mystery */
+
+.journal-header h2 {
+  margin: 0;
+}
+
+.journal-hint {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.journal-page {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 2px solid #6b4a2e;
+  background: #1c140f;
+  box-shadow:
+    inset 3px 3px 0 rgb(255 255 255 / 0.04),
+    inset -3px -3px 0 rgb(0 0 0 / 0.35);
+}
+
+.journal-page h3 {
+  margin: 0 0 10px;
+  color: var(--ember);
+  font-size: 18px;
+}
+
+.journal-page p {
+  margin: 0;
+}
+
+.journal-empty p + p {
+  margin-top: 6px;
+}
+
+.journal-entries,
+.journal-people {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal-chapter {
+  color: var(--ember);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.journal-entries p + p {
+  margin-top: 4px;
+}
+
+.journal-outcome {
+  color: #d8c8a8;
+  font-style: italic;
+}
+
+.journal-person {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.journal-face {
+  display: block;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border: 3px solid #8a7034;
+  background: #1e110e;
+}
+
+.journal-face.departed {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.journal-person-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.journal-name {
+  font-weight: 700;
+}
+
+.journal-role {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.journal-page .journal-standing {
+  margin-top: 4px;
+  color: var(--ember);
+  font-size: 14px;
+}
+
+.journal-facts {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.journal-mystery {
+  border-color: #5a3a6a;
+}
+
+.journal-mystery h3 {
+  color: #c8a0e8;
+}

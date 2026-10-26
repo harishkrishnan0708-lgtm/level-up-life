@@ -116,6 +116,49 @@
   }
 }
 
+.glove-left {
+  animation: rub-left 7s steps(1) infinite;
+}
+
+.glove-right {
+  animation: rub-right 7s steps(1) infinite;
+}
+
+/* Wick's hands meet, rub back and forth a few times, and settle on the counter again. */
+@keyframes rub-left {
+  0%,
+  78%,
+  100% {
+    transform: translate(0, 0);
+  }
+  80%,
+  86%,
+  92% {
+    transform: translate(14px, -4px);
+  }
+  83%,
+  89% {
+    transform: translate(18px, -4px);
+  }
+}
+
+@keyframes rub-right {
+  0%,
+  78%,
+  100% {
+    transform: translate(0, 0);
+  }
+  80%,
+  86%,
+  92% {
+    transform: translate(-14px, -4px);
+  }
+  83%,
+  89% {
+    transform: translate(-18px, -4px);
+  }
+}
+
 .lamp-glow {
   opacity: 0.1;
 }
@@ -377,6 +420,8 @@
   .flicker-slow,
   .merchant-eye,
   .moth,
+  .glove-left,
+  .glove-right,
   .passerby,
   .market-fog,
   .chatter {

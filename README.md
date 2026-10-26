@@ -32,4 +32,6 @@ npm run build
 
 ## Deploy
 
-Not hosted yet. The plan is a free static host (GitHub Pages or Netlify) serving `dist/`, so classmates can open it from a link.
+Play it at https://harishkrishnan0708-lgtm.github.io/level-up-life/ (each player's progress is saved on their own device).
+
+The link is served by GitHub Pages from the public copy at https://github.com/harishkrishnan0708-lgtm/level-up-life. To update it with the latest commit, run `scripts/publish-public-copy.sh "what changed"`; it builds the game and pushes `dist/` to the public copy's `gh-pages` branch, which Pages serves within a minute or two.

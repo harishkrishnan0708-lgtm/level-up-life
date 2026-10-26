@@ -1,25 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { Hero } from './hero'
-import { paintWickPortrait } from './marketPixels'
-import PixelArt from './PixelArt'
-import Portrait from './Portrait'
-import { CHAPTERS, SPEAKER_LOOKS, SPEAKER_NAMES, chapterScript, unlockHint, type Chapter, type StoryLine } from './story'
+import { SPEAKER_NAMES, meets } from './cast'
+import { CHAPTERS, castState, chapterLabel, chapterScript, markRead, stagingAt, unlockHint, type Chapter } from './story'
+import { bestStreakSoFar } from './streak'
+import StoryStage from './StoryStage'
 import TypedText from './TypedText'
 
-const WICK_PORTRAIT = paintWickPortrait()
-
 const ROMAN = ['', 'I', 'II', 'III']
-
-function SpeakerPortrait({ line, hero }: { line: StoryLine; hero: Hero }) {
-  if (line.speaker === 'narrator') {
-    return null
-  }
-  if (line.speaker === 'wick') {
-    return <PixelArt grid={WICK_PORTRAIT} className="story-portrait" label="Wick" />
-  }
-  const appearance = line.speaker === 'hero' ? hero.appearance : SPEAKER_LOOKS[line.speaker]
-  return <Portrait appearance={appearance} className="story-portrait" framing="face" />
-}
 
 interface StoryReaderProps {
   chapter: Chapter
@@ -32,7 +19,9 @@ interface StoryReaderProps {
 /** Plays a chapter of the Chronicle as a visual novel: one line at a time, a choice partway, and the ending. */
 function StoryReader({ chapter, hero, onChoose, onFinish, onClose }: StoryReaderProps) {
   const choiceId = hero.story.choices[chapter.id]
-  const { lines, choiceAt } = useMemo(() => chapterScript(chapter, choiceId), [chapter, choiceId])
+  // The cast as it stood when this chapter began, so a re-read looks the way it first did.
+  const cast = useMemo(() => castState(hero.story, chapter.id), [hero.story, chapter.id])
+  const { lines, choiceAt } = useMemo(() => chapterScript(chapter, choiceId, cast), [chapter, choiceId, cast])
   const [index, setIndex] = useState(0)
   const [typed, setTyped] = useState(false)
   const markTyped = useCallback(() => setTyped(true), [])
@@ -59,7 +48,7 @@ function StoryReader({ chapter, hero, onChoose, onFinish, onClose }: StoryReader
       <header className="story-header">
         <div>
           <p className="story-act">
-            Act {ROMAN[chapter.act]} · Chapter {chapter.number}
+            Act {ROMAN[chapter.act]} · {chapterLabel(chapter)}
           </p>
           <h2 id="story-title">{chapter.title}</h2>
         </div>
@@ -70,12 +59,13 @@ function StoryReader({ chapter, hero, onChoose, onFinish, onClose }: StoryReader
 
       {finished ? (
         <section className="story-end">
-          <p className="story-act">End of Chapter {chapter.number}</p>
+          <p className="story-act">End of {chapter.interlude ? 'the interlude' : chapterLabel(chapter)}</p>
           <h3>{chapter.title}</h3>
           {chosen && <p className="story-chose">You chose: {chosen.label.toLowerCase()}.</p>}
           {nextChapter && (
             <p className="story-hint">
-              {unlockHint(nextChapter)} to open Chapter {nextChapter.number}.
+              {unlockHint(nextChapter, hero.war, markRead(hero.story, chapter.id), bestStreakSoFar(hero.streak, hero.game, hero.plan))} to open{' '}
+              {nextChapter.interlude ? `“${nextChapter.title}”` : chapterLabel(nextChapter)}.
             </p>
           )}
           <button type="button" className="button-primary" onClick={onClose}>
@@ -84,13 +74,20 @@ function StoryReader({ chapter, hero, onChoose, onFinish, onClose }: StoryReader
         </section>
       ) : (
         <>
-          <div className="story-stage">{!choosing && <SpeakerPortrait line={line} hero={hero} />}</div>
+          <div className="story-letterbox">
+            <StoryStage
+              staging={stagingAt(lines, Math.min(index, lines.length - 1))}
+              speaker={choosing ? null : line.speaker}
+              hero={hero}
+              cast={cast}
+            />
+          </div>
           <section className={`story-box${line.speaker === 'narrator' && !choosing ? ' story-narration' : ''}`} aria-live="polite">
             {choosing && chapter.choice ? (
               <>
                 <p className="story-prompt">{chapter.choice.prompt}</p>
                 <div className="story-options">
-                  {chapter.choice.options.map((option) => (
+                  {chapter.choice.options.filter((option) => !option.when || meets(option.when, cast)).map((option) => (
                     <button key={option.id} type="button" className="button-secondary" onClick={() => onChoose(option.id)}>
                       {option.label}
                     </button>

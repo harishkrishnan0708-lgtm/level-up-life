@@ -34,6 +34,7 @@ import {
 } from './raids'
 import { chooseOption, markRead } from './story'
 import TabBackdrop from './TabBackdrop'
+import Journal from './Journal'
 import { allQuests, isPerfectDay, type QuestPlan } from './questPlan'
 import QuestPlanner from './QuestPlanner'
 import GuideCard from './GuideCard'
@@ -66,7 +67,7 @@ import QuestBoard from './QuestBoard'
 
 type Screen = { kind: 'main' } | { kind: 'heroes' } | { kind: 'create' } | { kind: 'edit'; heroId: string } | { kind: 'plan' }
 
-type Tab = 'quests' | 'shop' | 'kingdom' | 'war' | 'pets'
+type Tab = 'quests' | 'shop' | 'kingdom' | 'war' | 'pets' | 'journal'
 
 const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'quests', label: 'Quests' },
@@ -74,6 +75,7 @@ const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'kingdom', label: 'Kingdom' },
   { id: 'war', label: 'War' },
   { id: 'pets', label: 'Pets' },
+  { id: 'journal', label: 'Journal' },
 ]
 
 /** The test-luck switch only exists on the development server (`npm run dev`), never in a production build. */
@@ -464,7 +466,8 @@ function App() {
 
   return (
     <main className="app with-tabs">
-      <TabBackdrop tab={tab} />
+      {/* The journal is written at home, so it shares the kingdom's valley. */}
+      <TabBackdrop tab={tab === 'journal' ? 'kingdom' : tab} />
       <nav className="top-bar">
         <span className="app-name">Level Up Life</span>
         <button type="button" className="heroes-button" onClick={() => setScreen({ kind: 'heroes' })}>
@@ -504,6 +507,7 @@ function App() {
           onChapterRead={handleChapterRead}
         />
       )}
+      {tab === 'journal' && <Journal key={hero.id} hero={hero} />}
       {tab === 'pets' && (
         <Menagerie
           hero={hero}

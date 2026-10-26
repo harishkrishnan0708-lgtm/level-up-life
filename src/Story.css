@@ -135,21 +135,244 @@
   font-size: 18px;
 }
 
-.story-stage {
-  display: grid;
+/* The stage: a scene filling the width, the cast standing at its foot */
+
+/* Letterboxed like a film: the scene sits centred between the title and the dialogue. */
+.story-letterbox {
+  display: flex;
   flex: 1;
-  place-items: end center;
-  min-height: 140px;
-  padding-bottom: 12px;
+  align-items: center;
+  margin: 0 -16px;
 }
 
-.story-portrait {
+.story-stage-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 100%;
+  overflow: hidden;
+  border-block: 3px solid #2a1e12;
+  background: #0d0908;
+}
+
+.scene-backdrop {
+  position: absolute;
+  inset: 0;
+  animation: scene-cut 0.5s steps(4);
+}
+
+.scene-backdrop > svg {
   display: block;
-  width: min(48vw, 200px);
-  height: min(48vw, 200px);
-  border: 3px solid #8a7034;
-  background: #1e110e;
-  box-shadow: 0 0 0 3px #2a1e12;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-backdrop .market-scene {
+  height: 100%;
+}
+
+@keyframes scene-cut {
+  from {
+    opacity: 0;
+  }
+}
+
+.actor {
+  position: absolute;
+  bottom: 3%;
+  width: 30%;
+  max-width: 170px;
+  transform: translateX(-50%);
+  transition:
+    transform 0.25s steps(3),
+    filter 0.25s steps(3);
+}
+
+/* Whoever is speaking steps forward and into the light; the others fall back a little. */
+.actor.speaking {
+  z-index: 1;
+  transform: translateX(-50%) translateY(-5%) scale(1.06);
+}
+
+.actor.listening {
+  filter: brightness(0.55) saturate(0.8);
+  transform: translateX(-50%) translateY(3%);
+}
+
+.actor-sway {
+  animation: actor-sway 2.8s steps(2) infinite;
+}
+
+@keyframes actor-sway {
+  50% {
+    transform: translateY(1.5%);
+  }
+}
+
+.actor-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 32 / 56;
+  filter: drop-shadow(0 4px 0 rgb(0 0 0 / 0.5));
+}
+
+.actor-sway {
+  position: relative;
+}
+
+/* Habits drawn over a figure, in the figure's own pixel grid */
+.mannerism {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  shape-rendering: crispEdges;
+  overflow: visible;
+}
+
+.pipe-puff {
+  animation: pipe-puff 3.9s steps(8) infinite;
+}
+
+@keyframes pipe-puff {
+  from {
+    opacity: 0.8;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(3px, -10px);
+  }
+}
+
+/* A flick of the thumb: the coin jumps, spins, and lands, then a pause before the next. */
+.coin-toss {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: coin-toss 3.2s steps(1) infinite;
+}
+
+@keyframes coin-toss {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  65% {
+    transform: translateY(-3px) scaleY(0.4);
+  }
+  70% {
+    transform: translateY(-6px) scaleY(1);
+  }
+  75% {
+    transform: translateY(-7px) scaleY(0.4);
+  }
+  80% {
+    transform: translateY(-5px) scaleY(1);
+  }
+  85% {
+    transform: translateY(-2px) scaleY(0.4);
+  }
+}
+
+.smoke-puff {
+  animation: smoke-rise 6s steps(12) infinite;
+}
+
+@keyframes smoke-rise {
+  from {
+    opacity: 0.7;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(8px, -34px);
+  }
+}
+
+.snowflake {
+  animation: snow-fall 4.4s steps(11) infinite;
+}
+
+@keyframes snow-fall {
+  from {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-6px, 44px);
+  }
+}
+
+.ember-rise {
+  animation: ember-rise 3.6s steps(9) infinite;
+}
+
+@keyframes ember-rise {
+  from {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate(3px, -26px);
+  }
+}
+
+.jar-moth {
+  animation: jar-moth 0.9s steps(3) infinite;
+}
+
+@keyframes jar-moth {
+  50% {
+    transform: translate(1px, -2px);
+  }
+}
+
+.wind-seed {
+  animation: wind-seed 3s steps(12) infinite;
+}
+
+@keyframes wind-seed {
+  from {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(44px, -6px);
+  }
+}
+
+.dust-mote {
+  animation: dust-drift 6s steps(12) infinite;
+}
+
+@keyframes dust-drift {
+  50% {
+    opacity: 0.2;
+    transform: translate(4px, 6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-backdrop,
+  .actor-sway,
+  .smoke-puff,
+  .dust-mote,
+  .pipe-puff,
+  .coin-toss,
+  .snowflake,
+  .ember-rise,
+  .jar-moth,
+  .wind-seed {
+    animation: none;
+  }
 }
 
 .story-box {

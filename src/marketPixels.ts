@@ -411,10 +411,11 @@ function paintWick(): PixelGrid {
   wick.ellipse(100, 98, 11, 13.5, (x) => (x >= 100 ? '#5a4432' : '#3a2c20'))
   wick.ellipse(100, 98, 9.5, 12, '#040302')
 
-  for (const cx of [88, 112]) {
-    wick.ellipse(cx, 150, 5, 3.5, '#1d150f')
-    wick.rect(cx - 3, 148, cx + 2, 148, '#2e2218')
-  }
+  // A little brass lantern hanging at his belt; his hands are drawn over the scene so they can move
+  wick.rect(107, 136, 107, 137, '#3a2a1c')
+  wick.rect(105, 138, 109, 143, '#8a7034')
+  wick.rect(106, 139, 108, 142, '#ffc56b')
+  wick.set(106, 139, '#fff1c4')
   wick.outline()
   return wick
 }
@@ -496,6 +497,19 @@ export function paintStallLantern(phase: DayPhase = 'night'): PixelGrid {
     ['..KKK..', '.KKKKK.', 'FGGGGGF', 'FGGWGGF', 'FGWWWGF', 'FGWWWGF', 'FGGWGGF', 'FGGGGGF', '.KKKKK.', '...K...'],
     lanternColors(phase),
   )
+}
+
+/** Where Wick's gloved hands rest on the counter, at their middle. */
+export const WICK_HANDS: Point[] = [[88, 149], [112, 149]]
+
+/** One of Wick's gloves: dark leather, a ridge of knuckles catching the light. */
+export function paintWickGlove(): PixelGrid {
+  const glove = new PixelGrid(12, 8)
+  glove.ellipse(6, 4.5, 5, 3.5, '#1d150f')
+  glove.rect(3, 2, 8, 2, '#2e2218')
+  glove.set(4, 2, '#4a3828')
+  glove.outline()
+  return glove
 }
 
 /** Wick's eyes, the only part of his face anyone has seen, at their left pixel. */

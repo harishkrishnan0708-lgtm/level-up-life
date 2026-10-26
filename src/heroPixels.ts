@@ -659,3 +659,348 @@ export function paintHero(appearance: Appearance, facing: Facing = 'front'): Pix
   grid.outline()
   return grid
 }
+
+// ── Full-body figures for story scenes ──────────────────────────────────────
+
+/** Story figures are the same anime head on a small chibi body, 32 pixels wide and 56 tall. */
+export const FIGURE_WIDTH = 32
+export const FIGURE_HEIGHT = 56
+
+/** What a character is doing with their body while they speak, or while they listen. */
+export type Pose = 'stand' | 'talk' | 'point' | 'arms-crossed' | 'hand-on-hilt' | 'think' | 'shrug' | 'fist' | 'hand-on-heart' | 'bound'
+
+export const POSES: readonly Pose[] = ['stand', 'talk', 'point', 'arms-crossed', 'hand-on-hilt', 'think', 'shrug', 'fist', 'hand-on-heart', 'bound']
+
+/** An arm as shoulder, elbow, and hand, on the viewer's left and right. */
+type Arm = readonly [Point, Point, Point]
+
+const LEFT_SHOULDER: Point = [10, 24]
+const RIGHT_SHOULDER: Point = [21, 24]
+const LEFT_DOWN: Arm = [LEFT_SHOULDER, [8, 30], [8, 36]]
+const RIGHT_DOWN: Arm = [RIGHT_SHOULDER, [23, 30], [23, 36]]
+
+const ARMS: Record<Pose, readonly [Arm, Arm]> = {
+  stand: [LEFT_DOWN, RIGHT_DOWN],
+  talk: [LEFT_DOWN, [RIGHT_SHOULDER, [26, 29], [26, 23]]],
+  point: [LEFT_DOWN, [RIGHT_SHOULDER, [26, 25], [31, 24]]],
+  'arms-crossed': [
+    [LEFT_SHOULDER, [9, 30], [19, 30]],
+    [RIGHT_SHOULDER, [22, 30], [12, 28]],
+  ],
+  'hand-on-hilt': [LEFT_DOWN, [RIGHT_SHOULDER, [24, 30], [21, 34]]],
+  think: [
+    [LEFT_SHOULDER, [9, 31], [18, 31]],
+    [RIGHT_SHOULDER, [22, 28], [18, 21]],
+  ],
+  shrug: [
+    [LEFT_SHOULDER, [6, 29], [3, 25]],
+    [RIGHT_SHOULDER, [25, 29], [28, 25]],
+  ],
+  fist: [LEFT_DOWN, [RIGHT_SHOULDER, [26, 25], [25, 18]]],
+  'hand-on-heart': [LEFT_DOWN, [RIGHT_SHOULDER, [22, 31], [16, 27]]],
+  bound: [
+    [LEFT_SHOULDER, [10, 31], [14, 34]],
+    [RIGHT_SHOULDER, [21, 31], [17, 34]],
+  ],
+}
+
+/** Where a figure's hand is in a pose, on the viewer's left or right. */
+export function handPosition(pose: Pose, side: 'left' | 'right'): Point {
+  return ARMS[pose][side === 'left' ? 0 : 1][2]
+}
+
+/** A three-pixel-thick limb along a path, lit on its outer edge. */
+function limb(grid: PixelGrid, points: readonly Point[], sleeve: Ramp): void {
+  for (let index = 1; index < points.length; index++) {
+    const [x0, y0] = points[index - 1]
+    const [x1, y1] = points[index]
+    const flat = Math.abs(x1 - x0) > Math.abs(y1 - y0)
+    for (const offset of [-1, 0, 1]) {
+      const tone = offset < 0 ? sleeve.light : offset > 0 ? sleeve.dark : sleeve.base
+      grid.line(x0 + (flat ? 0 : offset), y0 + (flat ? offset : 0), x1 + (flat ? 0 : offset), y1 + (flat ? offset : 0), tone)
+    }
+  }
+}
+
+/** What the figure wears from the neck down, by outfit. */
+function figureClothes(appearance: Appearance, cloth: Ramp) {
+  switch (appearance.outfit) {
+    case 'armor':
+      return { torso: STEEL, sleeve: STEEL, legs: LEATHER, robe: false }
+    case 'black-plate':
+      return { torso: BLACK_STEEL, sleeve: BLACK_STEEL, legs: BLACK_STEEL, robe: false }
+    case 'robe':
+      return { torso: cloth, sleeve: cloth, legs: cloth, robe: true }
+    default:
+      return { torso: { light: cloth.base, base: cloth.dark, dark: shade(cloth.dark, -0.3) }, sleeve: cloth, legs: LEATHER, robe: false }
+  }
+}
+
+/** What the figure carries: in the hanging left hand, or at the hip when the pose rests a hand on the hilt. */
+function figureItem(grid: PixelGrid, appearance: Appearance, pose: Pose, hand: Point): void {
+  const swordLike = appearance.heldItem === 'sword' || appearance.heldItem === 'flame-sword'
+  if (pose === 'hand-on-hilt') {
+    // A sword at the hip, the hand on its hilt.
+    grid.line(22, 35, 27, 50, LEATHER.dark)
+    grid.line(23, 35, 28, 50, LEATHER.base)
+    grid.rect(19, 33, 23, 33, GOLD)
+    grid.rect(21, 31, 21, 32, '#3a2416')
+  }
+  const [downX, downY] = LEFT_DOWN[2]
+  if (hand[0] !== downX || hand[1] !== downY || (swordLike && pose === 'hand-on-hilt')) {
+    return
+  }
+  const [x, y] = hand
+  switch (appearance.heldItem) {
+    case 'sword':
+    case 'flame-sword': {
+      const fire = appearance.heldItem === 'flame-sword'
+      grid.rect(x - 2, y + 2, x + 2, y + 2, fire ? BLACK_STEEL.base : GOLD)
+      grid.rect(x, y + 3, x, y + 16, (_px, py) => (fire ? (py > y + 12 ? GLOW : py > y + 7 ? '#ffb347' : EMBER) : STEEL.light))
+      grid.rect(x + 1, y + 3, x + 1, y + 15, fire ? EMBER : STEEL.base)
+      break
+    }
+    case 'staff':
+      grid.rect(x - 1, 10, x - 1, 55, (_px, py) => (py % 3 ? WOOD : WOOD_DARK))
+      grid.ellipse(x - 1, 8, 2.6, 2.6, (px) => (px < x - 1 ? ORB.light : ORB.base))
+      break
+    case 'wand':
+      grid.line(x, y + 1, x + 3, y + 7, WOOD)
+      grid.set(x + 3, y + 8, GLOW)
+      break
+    case 'lantern':
+      grid.rect(x, y + 2, x, y + 3, '#3a3226')
+      grid.rect(x - 2, y + 4, x + 2, y + 10, '#5a4520')
+      grid.rect(x - 1, y + 5, x + 1, y + 9, '#ffc56b')
+      break
+    case 'scythe':
+      grid.rect(x - 1, 8, x - 1, 55, WOOD)
+      grid.polygon([[x - 1, 7], [x - 1, 10], [x - 8, 12], [x - 12, 17], [x - 9, 11], [x - 5, 8]], (_px, py) => (py < 10 ? STEEL.light : STEEL.base))
+      break
+  }
+}
+
+/** A scattering of lighter pixels, for textures like fur. */
+function speckle(x: number, y: number): boolean {
+  return (x * 7 + y * 13) % 5 === 0
+}
+
+/** What sets a story character apart from a hero built in the creator: age, scars, and the things they carry. */
+export interface CharacterFeatures {
+  /** An older face: narrowed eyes under heavy brows, crow's feet, and no rosy cheeks. */
+  weathered?: boolean
+  /** An eye on the viewer's right, blinded and scarred. */
+  blindEye?: boolean
+  moustache?: boolean
+  stubble?: boolean
+  /** A short clay pipe, always in the mouth. */
+  pipe?: boolean
+  /** The ear on the viewer's left is gone; only a ragged scar remains. */
+  missingEar?: boolean
+  /** Dark rings of sleepless nights under the eyes. */
+  eyeBags?: boolean
+  /** Hollow cheeks and heavy, half-closed lids: someone who has stopped expecting much. */
+  worn?: boolean
+  /** A bandage wound round the forearm on the viewer's left. */
+  bandage?: boolean
+  /** Patches sewn over the cloak. */
+  patched?: boolean
+  /** Wider shoulders and a heavier frame. */
+  broad?: boolean
+  /** A little carved wooden bird hanging from the belt on a cord. */
+  carving?: boolean
+  /** A full beard, in the hair colour, over the chin and chest. */
+  beard?: boolean
+  /** A heavy fur collar over the shoulders, the mark of a lord. */
+  furMantle?: boolean
+  /** Smudges of soot on the cheek and the robe. */
+  soot?: boolean
+  /** Red stripes of war paint across the cheeks. */
+  warPaint?: boolean
+  /** A great axe slung over the shoulder, its head beside the face. */
+  greatAxe?: boolean
+}
+
+const SCAR = '#9a5048'
+const MILKY_EYE = '#d4d8dc'
+const CLAY = { light: '#efe2c8', base: '#cdbd98', dark: '#8f7f62' }
+const BANDAGE = ['#e8e0d0', '#c8c0b0']
+
+function paintFeatures(grid: PixelGrid, features: CharacterFeatures, skin: Ramp, hair: Ramp, sleeve: Ramp, leftHand: Point): void {
+  const face = [skin.light, skin.base, skin.dark]
+  if (features.weathered) {
+    for (const left of [10, 18]) {
+      // Narrow, steady eyes under one bushy brow, instead of wide anime ones
+      grid.rect(left - 1, 11, left + 4, 16, skin.base)
+      grid.rect(left - 1, 12, left + 4, 12, hair.base)
+      grid.rect(left, 14, left + 3, 14, skin.dark)
+      grid.rect(left, 15, left + 3, 15, LASH)
+      grid.set(left + (left < MID ? 2 : 1), 15, '#4a3a30')
+      grid.set(left < MID ? left - 1 : left + 4, 16, skin.dark)
+    }
+    for (const x of [11, 12, 19, 20]) {
+      grid.recolor(x, 18, skin.base, [BLUSH])
+    }
+    grid.set(12, 18, skin.dark)
+    grid.set(19, 18, skin.dark)
+  }
+  if (features.blindEye) {
+    grid.rect(19, 14, 21, 15, MILKY_EYE)
+    grid.line(20, 9, 21, 19, SCAR)
+  }
+  if (features.worn) {
+    for (const left of [10, 18]) {
+      grid.rect(left, 13, left + 3, 14, skin.dark)
+      grid.rect(left, 14, left + 3, 14, LASH)
+    }
+    for (const x of [11, 12, 19, 20]) {
+      grid.recolor(x, 18, skin.base, [BLUSH])
+    }
+    grid.set(11, 18, skin.dark)
+    grid.set(20, 18, skin.dark)
+  }
+  if (features.eyeBags) {
+    for (const left of [10, 18]) {
+      grid.rect(left + 1, 17, left + 3, 17, shade(skin.dark, -0.25))
+    }
+  }
+  if (features.stubble) {
+    grid.ellipse(MID, 20, 5, 2, (x, y) => (y >= 20 && (x * 2 + y) % 3 === 0 && face.includes(grid.get(x, y) ?? '') ? shade(skin.dark, -0.15) : null))
+  }
+  if (features.moustache) {
+    grid.rect(12, 18, 19, 18, hair.base)
+    grid.rect(13, 19, 18, 19, hair.dark)
+    grid.set(12, 19, hair.dark)
+    grid.set(19, 20, hair.dark)
+    grid.set(12, 20, hair.dark)
+  }
+  if (features.pipe) {
+    grid.line(17, 20, 21, 22, CLAY.dark)
+    grid.rect(21, 19, 23, 22, (x) => (x === 21 ? CLAY.light : CLAY.base))
+    grid.rect(21, 19, 23, 19, '#3a2a1e')
+    grid.set(22, 19, EMBER)
+  }
+  if (features.missingEar) {
+    // Hair swept back on that side to show what's left
+    grid.rect(7, 13, 9, 19, (x, y) => (x === 9 || y > 13 ? skin.base : null))
+    for (const [x, y] of [[8, 14], [9, 15], [8, 16], [9, 17]] as const) {
+      grid.set(x, y, SCAR)
+    }
+  }
+  if (features.bandage) {
+    const [handX, handY] = leftHand
+    for (let y = handY - 6; y <= handY - 2; y++) {
+      for (let x = handX - 2; x <= handX + 2; x++) {
+        // Only the sleeve itself, so the wrapping never spills onto the chest
+        grid.recolor(x, y, BANDAGE[y % 2], tones(sleeve))
+      }
+    }
+  }
+  if (features.warPaint) {
+    for (const [x, y] of [[10, 17], [11, 17], [12, 17], [19, 17], [20, 17], [21, 17], [10, 18], [21, 18]] as const) {
+      grid.set(x, y, '#a8281e')
+    }
+  }
+  if (features.greatAxe) {
+    grid.line(24, 52, 27, 14, WOOD_DARK)
+    grid.line(25, 52, 28, 14, WOOD)
+    grid.polygon([[27, 10], [31, 7], [31, 21], [27, 18]], (x, y) => (x > 29 ? STEEL.light : y < 14 ? STEEL.base : STEEL.dark))
+    grid.set(28, 11, WHITE)
+  }
+  if (features.soot) {
+    for (const [x, y] of [[11, 17], [12, 18], [20, 16], [13, 30], [18, 41], [10, 46], [21, 49]] as const) {
+      grid.set(x, y, '#2a2226')
+    }
+  }
+  if (features.furMantle) {
+    grid.ellipse(MID, 22.5, 10, 3, (x, y) => (speckle(x, y) ? '#b8aa98' : y < 22 ? '#a89a86' : '#7a6e60'))
+  }
+  if (features.beard) {
+    paintBeard(grid, hair, 'front')
+    grid.recolor(15, 19, LIPS, [hair.base, hair.light, hair.dark])
+    grid.set(16, 19, LIPS)
+  }
+  if (features.carving) {
+    grid.rect(19, 35, 19, 36, '#3a2a1e')
+    grid.rect(18, 37, 20, 38, WOOD)
+    grid.set(21, 37, WOOD)
+    grid.set(17, 38, WOOD_DARK)
+    grid.set(20, 37, '#1a120c')
+  }
+  if (features.patched) {
+    for (const [x, y] of [[11, 26], [19, 31], [7, 42]] as const) {
+      grid.rect(x, y, x + 2, y + 2, '#5a4a3a')
+      grid.set(x + 1, y + 1, '#8a7a5a')
+    }
+  }
+}
+
+/** A full-body figure for story scenes: the same head as the portrait, a chibi body in the hero's outfit, posed. */
+export function paintFigure(appearance: Appearance, pose: Pose, features: CharacterFeatures = {}): PixelGrid {
+  const grid = new PixelGrid(FIGURE_WIDTH, FIGURE_HEIGHT)
+  const { skin, hair, cloth, iris } = heroPalette(appearance)
+  const clothes = figureClothes(appearance, cloth)
+  const [leftArm, rightArm] = ARMS[pose]
+
+  paintBehind(grid, appearance, hair, cloth)
+  if (appearance.outfit === 'cloak') {
+    // The cape hangs behind the body, nearly to the heels.
+    grid.polygon([[8, 22], [23, 22], [26, 50], [5, 50]], litFromLeft({ light: cloth.base, base: cloth.dark, dark: shade(cloth.dark, -0.3) }, MID, 10))
+  }
+  grid.rect(14, 19, 17, 23, skin.dark)
+
+  if (clothes.robe) {
+    grid.polygon([[10, 22], [21, 22], [25, 53], [6, 53]], litFromLeft(clothes.torso, MID, 10))
+    grid.rect(7, 52, 24, 53, GOLD_DARK)
+    grid.line(MID, 26, MID, 51, cloth.dark)
+    grid.rect(9, 54, 12, 55, LEATHER.dark)
+    grid.rect(19, 54, 22, 55, LEATHER.dark)
+  } else {
+    for (const [left, right] of [[11, 14], [17, 20]] as const) {
+      grid.rect(left, 36, right, 50, litFromLeft(clothes.legs, (left + right) / 2, 2))
+      grid.rect(left, 50, right + (left < MID ? 0 : 1), 54, (_x, y) => (y === 50 ? '#3a2a1e' : '#2a2018'))
+      grid.rect(left - (left < MID ? 1 : 0), 54, right + (left < MID ? 0 : 1), 55, '#1e160f')
+    }
+  }
+  grid.rect(features.broad ? 9 : 10, 22, features.broad ? 22 : 21, 35, litFromLeft(clothes.torso, MID, 6))
+  grid.rect(10, 34, 21, 35, appearance.outfit === 'robe' ? GOLD : LEATHER.dark)
+  grid.set(15, 34, GOLD)
+  if (appearance.outfit === 'armor') {
+    grid.rect(13, 24, 18, 39, cloth.base)
+    for (const [x, y] of [[15, 26], [16, 26], [14, 27], [15, 27], [16, 27], [17, 27], [15, 28], [16, 28]] as const) {
+      grid.set(x, y, GOLD)
+    }
+  }
+  if (appearance.outfit === 'black-plate') {
+    for (const [x, y] of [[12, 26], [19, 29], [13, 31], [18, 24]] as const) {
+      grid.set(x, y, EMBER)
+    }
+  }
+  if (appearance.outfit === 'cloak') {
+    grid.rect(15, 22, 16, 23, GOLD)
+  }
+  if (appearance.outfit === 'armor' || appearance.outfit === 'black-plate') {
+    const metal = appearance.outfit === 'armor' ? STEEL : BLACK_STEEL
+    grid.ellipse(9, 24, 3.6, 2.6, (_x, y) => (y < 24 ? metal.light : metal.base))
+    grid.ellipse(22, 24, 3.6, 2.6, (_x, y) => (y < 24 ? metal.base : metal.dark))
+  }
+
+  for (const arm of [leftArm, rightArm]) {
+    limb(grid, arm, clothes.sleeve)
+    const [handX, handY] = arm[2]
+    grid.ellipse(handX + 0.5, handY + 0.5, 1.7, 1.7, (x) => (x <= handX ? skin.light : skin.base))
+  }
+  if (pose === 'bound') {
+    grid.rect(13, 33, 18, 35, (x) => (x % 2 ? '#a08a5a' : '#7a6a42'))
+  }
+  figureItem(grid, appearance, pose, leftArm[2])
+
+  paintFace(grid, appearance, skin, hair, iris)
+  paintHair(grid, appearance, hair, skin, cloth)
+  paintRaceFeatures(grid, appearance, skin, hair, iris, 'front')
+  paintHat(grid, appearance, iris, 'front')
+  beardOverHelm(grid, appearance, hair, 'front')
+  paintFeatures(grid, features, skin, hair, clothes.sleeve, leftArm[2])
+  grid.outline()
+  return grid
+}

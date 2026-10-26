@@ -3,7 +3,7 @@ import { GUIDE_STEPS, guideDone, markGuideDone } from './guide'
 
 describe('the first-time tour', () => {
   it('visits every tab and ends by planning the week', () => {
-    expect(new Set(GUIDE_STEPS.map(({ tab }) => tab))).toEqual(new Set(['quests', 'shop', 'kingdom', 'war', 'pets']))
+    expect(new Set(GUIDE_STEPS.map(({ tab }) => tab))).toEqual(new Set(['quests', 'shop', 'kingdom', 'war', 'pets', 'journal']))
     expect(GUIDE_STEPS.at(-1)).toMatchObject({ tab: 'quests', title: 'Plan your week' })
   })
 

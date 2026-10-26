@@ -1,5 +1,5 @@
 /** The first-time tour: one stop per tab, ending with planning the week. */
-export type GuideTab = 'quests' | 'shop' | 'kingdom' | 'war' | 'pets'
+export type GuideTab = 'quests' | 'shop' | 'kingdom' | 'war' | 'pets' | 'journal'
 
 export interface GuideStep {
   tab: GuideTab
@@ -38,6 +38,11 @@ export const GUIDE_STEPS: readonly GuideStep[] = [
     tab: 'pets',
     title: 'The menagerie',
     text: 'Perfect days can turn up eggs. The quests you complete warm them until they hatch into companions that boost your XP.',
+  },
+  {
+    tab: 'journal',
+    title: 'Your journal',
+    text: 'Everything that happens in the story is written down here: what you chose, the people you’ve met, and what you know about them.',
   },
   {
     tab: 'quests',

@@ -110,6 +110,11 @@ export function closeDays(streak: StreakState, lastGame: GameState, plan: QuestP
   return { streak: { ...streak, history, best: Math.max(streak.best, yesterday.days) }, candles: left }
 }
 
+/** The longest streak the hero has ever had, counting the one they're on today. Interludes open from it. */
+export function bestStreakSoFar(streak: StreakState, today: GameState, plan: QuestPlan): number {
+  return Math.max(streak.best, currentStreak(streak, today, plan).days)
+}
+
 /** A milestone just reached and not yet paid out for this streak, if any. */
 export function milestoneReached(streak: StreakState, before: StreakNow, after: StreakNow) {
   if (after.days <= before.days || !after.start) {

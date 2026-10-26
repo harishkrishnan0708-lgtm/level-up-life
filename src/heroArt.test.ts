@@ -13,7 +13,7 @@ import {
   type Appearance,
   type Option,
 } from './hero'
-import { HERO_GRID_SIZE, paintHero } from './heroPixels'
+import { FIGURE_HEIGHT, FIGURE_WIDTH, HERO_GRID_SIZE, POSES, paintFigure, paintHero } from './heroPixels'
 import { BACKDROP_HEIGHT, BACKDROP_WIDTH, paintBackdrop, type BackdropTab } from './backdrops'
 import { paintCrest } from './crestSprites'
 import { paintItem } from './itemSprites'
@@ -60,6 +60,29 @@ describe.each([
       }
       const changed = fingerprint(paint({ ...DEFAULT_APPEARANCE, [slot]: option.id } as Appearance))
       expect(changed, `${slot}: ${option.id}`).not.toBe(plain)
+    }
+  })
+})
+
+describe('full-body story figures', () => {
+  it('stand at full height in every pose, and every pose looks different', () => {
+    const fingerprints = POSES.map((pose) => {
+      const grid = paintFigure(DEFAULT_APPEARANCE, pose)
+      expect([grid.width, grid.height]).toEqual([FIGURE_WIDTH, FIGURE_HEIGHT])
+      expect(grid.get(12, FIGURE_HEIGHT - 2), `${pose} has feet`).not.toBeNull()
+      return fingerprint(grid)
+    })
+    expect(new Set(fingerprints).size).toBe(POSES.length)
+  })
+
+  it('show every appearance option, just as the portrait does', () => {
+    const plain = fingerprint(paintFigure(DEFAULT_APPEARANCE, 'stand'))
+    for (const slot of Object.keys(OPTIONS) as (keyof Appearance)[]) {
+      for (const option of OPTIONS[slot]) {
+        if (option.id !== DEFAULT_APPEARANCE[slot]) {
+          expect(fingerprint(paintFigure({ ...DEFAULT_APPEARANCE, [slot]: option.id } as Appearance, 'stand')), `${slot}: ${option.id}`).not.toBe(plain)
+        }
+      }
     }
   })
 })
