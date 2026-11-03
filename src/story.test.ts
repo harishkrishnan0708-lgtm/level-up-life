@@ -86,6 +86,14 @@ describe('the Chronicle', () => {
     expect(stagingAt(lines, 2).poses.holt).toBe('arms-crossed')
   })
 
+  it('gives each character a resting face, and lets a line change the speaker’s for that line only', () => {
+    const { lines } = chapterScript(firstChapter, 'enlist')
+    const joke = lines.findIndex((line) => line.text.includes('counting that one as a tactic'))
+    expect(stagingAt(lines, 1).moods).toMatchObject({ holt: 'stern', hero: 'neutral' })
+    expect(stagingAt(lines, joke).moods.holt).toBe('happy')
+    expect(stagingAt(lines, joke + 1).moods.holt).toBe('stern')
+  })
+
   it('drops damaged entries from the saved list of beaten rivals', () => {
     expect(sanitizeWarRecord({ beaten: ['old-fort', 7, 'old-fort'] }).beaten).toEqual(['old-fort'])
   })

@@ -13,7 +13,8 @@ import {
   type Appearance,
   type Option,
 } from './hero'
-import { FIGURE_HEIGHT, FIGURE_WIDTH, HERO_GRID_SIZE, POSES, paintFigure, paintHero } from './heroPixels'
+import { characterLook, newCastState } from './cast'
+import { EXPRESSIONS, FIGURE_HEIGHT, FIGURE_WIDTH, HERO_GRID_SIZE, POSES, paintFigure, paintHero } from './heroPixels'
 import { BACKDROP_HEIGHT, BACKDROP_WIDTH, paintBackdrop, type BackdropTab } from './backdrops'
 import { paintCrest } from './crestSprites'
 import { paintItem } from './itemSprites'
@@ -83,6 +84,25 @@ describe('full-body story figures', () => {
           expect(fingerprint(paintFigure({ ...DEFAULT_APPEARANCE, [slot]: option.id } as Appearance, 'stand')), `${slot}: ${option.id}`).not.toBe(plain)
         }
       }
+    }
+  })
+
+  it('show every expression, a blink, and a moving mouth, changing only the face', () => {
+    const face = (expression: (typeof EXPRESSIONS)[number], blinking = false, talking = false) =>
+      paintFigure(DEFAULT_APPEARANCE, 'stand', {}, { expression, blinking, talking })
+    const faces = [...EXPRESSIONS.map((expression) => face(expression)), face('neutral', true), face('neutral', false, true)]
+    expect(new Set(faces.map(fingerprint)).size).toBe(faces.length)
+    const belowTheChin = (grid: PixelGrid) => grid.cells.slice(22 * FIGURE_WIDTH).join(',')
+    for (const grid of faces) {
+      expect(belowTheChin(grid)).toBe(belowTheChin(faces[0]))
+    }
+  })
+
+  it('give Holt a readable mood even though his moustache hides his mouth', () => {
+    const { appearance, features } = characterLook('holt', newCastState().holt)
+    const neutral = fingerprint(paintFigure(appearance, 'stand', features))
+    for (const expression of EXPRESSIONS.filter((expression) => expression !== 'neutral')) {
+      expect(fingerprint(paintFigure(appearance, 'stand', features, { expression })), expression).not.toBe(neutral)
     }
   })
 })

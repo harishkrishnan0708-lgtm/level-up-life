@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './TypedText.css'
+import { playSound } from './sounds'
 
 /** Reveals text a few letters at a time, like someone speaking. Tap to show it all at once. */
 function TypedText({ text, onDone }: { text: string; onDone: () => void }) {
@@ -9,6 +10,10 @@ function TypedText({ text, onDone }: { text: string; onDone: () => void }) {
     if (shown >= text.length) {
       onDone()
       return
+    }
+    // A soft blip every few letters, like an old game's dialogue box.
+    if (shown % 6 === 0) {
+      playSound('blip')
     }
     const timer = window.setTimeout(() => setShown((count) => Math.min(text.length, count + 2)), 30)
     return () => window.clearTimeout(timer)

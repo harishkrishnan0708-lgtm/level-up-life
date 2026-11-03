@@ -6,10 +6,11 @@ import { paintCrest } from './crestSprites'
 import { questsOn } from './questPlan'
 import type { Hero } from './hero'
 import PixelArt from './PixelArt'
-import { PRACTICE_RIVAL, RIVALS, mightBreakdown, raidReadiness, rivalById, scoutAccuracy, startingEngines, totalMight, type Rival } from './raids'
+import { PRACTICE_RIVAL, RIVALS, WAR_UNLOCK_LEVEL, mightBreakdown, raidReadiness, rivalById, scoutAccuracy, startingEngines, totalMight, warUnlockProgress, warUnlocked, type Rival } from './raids'
 import { spoilsClue } from './clues'
 import { COACH_NAME, coachAdvice } from './coach'
-import { EVENT_TEXT, PHASES, availableActions, eventChoices, type CoinFace, type Siege } from './siege'
+import { NUMBERS_GUIDE, ORDER_GUIDE, PHASE_GUIDE, orderTabs, type OrderCategory } from './orderGuide'
+import { EVENT_TEXT, PHASES, availableActions, eventChoices, isNewOrder, type CoinFace, type Phase, type Siege, type SiegeAction } from './siege'
 
 /** A rival's insignia: a pixel shield in a blood-red frame. */
 function crest(rival: Rival) {
@@ -23,6 +24,34 @@ function crest(rival: Rival) {
 function CrestSprite({ rivalId }: { rivalId: string }) {
   const grid = useMemo(() => paintCrest(rivalId), [rivalId])
   return grid ? <PixelArt grid={grid} className="crest-sprite" /> : null
+}
+
+/** What a new hero sees on the War tab before it opens: what's coming, and how close they are. */
+function WarLocked({ hero }: { hero: Hero }) {
+  const { earned, needed } = warUnlockProgress(hero.game)
+  return (
+    <div className="war">
+      <header className="war-header">
+        <h2>The War</h2>
+        <p className="war-record">Opens at level {WAR_UNLOCK_LEVEL}</p>
+      </header>
+      <section className="coach-card">
+        <p className="coach-name">{COACH_NAME}</p>
+        <p className="coach-tip">
+          “Not yet, recruit. An army follows a leader who keeps their own habits first. Do your quests for a day or two, and when you
+          reach level {WAR_UNLOCK_LEVEL} I’ll show you how to take a castle. That’s where your story begins.”
+        </p>
+      </section>
+      <section className="war-unlock">
+        <div className="xp-bar" role="progressbar" aria-label={`XP toward level ${WAR_UNLOCK_LEVEL}`} aria-valuemin={0} aria-valuemax={needed} aria-valuenow={earned}>
+          <div className="xp-fill" style={{ width: `${(earned / needed) * 100}%` }} />
+        </div>
+        <p className="xp-label">
+          {earned} / {needed} XP · {needed - earned} XP to go
+        </p>
+      </section>
+    </div>
+  )
 }
 
 const OUTCOME_TITLES = { victory: 'Victory!', defeat: 'Defeat', stalemate: 'Withdrawn' } as const
@@ -64,10 +93,15 @@ function War({
   const accuracy = scoutAccuracy(hero.holdings)
   const engines = startingEngines(hero.holdings)
 
+  if (!warUnlocked(hero.game, hero.war)) {
+    return <WarLocked hero={hero} />
+  }
+
   if (hero.war.activeSiege) {
     return (
       <SiegeView
         siege={hero.war.activeSiege}
+        firstTime={!hero.war.beaten.includes(hero.war.activeSiege.rivalId)}
         coins={hero.game.coins}
         onCoinCall={onCoinCall}
         onOrder={onOrder}
@@ -240,10 +274,10 @@ function CoinTossCard({ siege, onCall }: { siege: Siege; onCall: (call: CoinFace
           <span className="coin-face">?</span>
         </div>
         <div className="confirm-march-actions">
-          <button type="button" className="button-secondary" onClick={() => onCall('heads')}>
+          <button type="button" className="button-secondary" data-sfx onClick={() => onCall('heads')}>
             Call heads
           </button>
-          <button type="button" className="button-secondary" onClick={() => onCall('tails')}>
+          <button type="button" className="button-secondary" data-sfx onClick={() => onCall('tails')}>
             Call tails
           </button>
         </div>
@@ -264,8 +298,108 @@ function CoinTossCard({ siege, onCall }: { siege: Siege; onCall: (call: CoinFace
   )
 }
 
+/** Explains the current phase, the given orders, and the numbers. Reading it doesn't use up any time in the siege. */
+function SiegeGuide({ phase, actions }: { phase: Phase; actions: readonly SiegeAction[] }) {
+  return (
+    <details className="siege-guide">
+      <summary>What do these mean?</summary>
+      <p className="siege-guide-phase">{PHASE_GUIDE[phase]}</p>
+      <dl>
+        {actions.map((action) => (
+          <div key={action.id}>
+            <dt>{action.label}</dt>
+            <dd>{ORDER_GUIDE[action.id]}</dd>
+          </div>
+        ))}
+      </dl>
+      <details className="siege-guide-numbers">
+        <summary>The numbers</summary>
+        <dl>
+          {NUMBERS_GUIDE.map(({ name, meaning }) => (
+            <div key={name}>
+              <dt>{name}</dt>
+              <dd>{meaning}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </details>
+  )
+}
+
+interface OrdersPanelProps {
+  siege: Siege
+  coins: number
+  firstTime: boolean
+  /** The order Holt suggests in the practice siege; its tab opens by itself. */
+  suggestedActionId: string | null
+  onOrder: (actionId: string) => void
+}
+
+/** The orders the player can give, one category at a time when there are too many to take in at once. */
+function OrdersPanel({ siege, coins, firstTime, suggestedActionId, onOrder }: OrdersPanelProps) {
+  // A tab the player picks holds until the phase or Holt's suggestion moves on.
+  const moment = `${siege.phase}/${suggestedActionId}`
+  const [picked, setPicked] = useState<{ moment: string; tab: OrderCategory } | null>(null)
+  const actions = availableActions(siege)
+  const orders = actions.filter((action) => !action.retreat)
+  const tabs = orderTabs(orders)
+  const suggestedTab = tabs.find((tab) => tab.orders.some((order) => order.id === suggestedActionId))
+  const wanted = picked?.moment === moment ? picked.tab : suggestedTab?.id
+  const openTab = tabs.find((tab) => tab.id === wanted) ?? tabs[0]
+  const shown = openTab ? openTab.orders : orders
+  const isNew = (actionId: string) => firstTime && isNewOrder(siege, actionId)
+
+  return (
+    <section aria-label="Your orders">
+      <h3 className="orders-title">Your orders</h3>
+      {tabs.length > 0 && (
+        <div className="order-tabs">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`order-tab${tab === openTab ? ' open' : ''}`}
+              aria-pressed={tab === openTab}
+              onClick={() => setPicked({ moment, tab: tab.id })}
+            >
+              {tab.name} ({tab.orders.length})
+              {tab.orders.some((order) => isNew(order.id)) && <span className="new-order-tag">New</span>}
+            </button>
+          ))}
+        </div>
+      )}
+      <SiegeGuide phase={siege.phase} actions={[...shown, ...actions.filter((action) => action.retreat)]} />
+      <div className="orders">
+        {shown.map((action) => {
+          const tooPoor = (action.coinCost ?? 0) > coins
+          return (
+            <button
+              key={action.id}
+              type="button"
+              className={`order${suggestedActionId === action.id ? ' suggested' : ''}`}
+              disabled={tooPoor}
+              data-sfx
+              onClick={() => onOrder(action.id)}
+            >
+              <span className="order-label">
+                {action.label}
+                {suggestedActionId === action.id && <span className="suggested-tag">Suggested</span>}
+                {isNew(action.id) && <span className="new-order-tag">New</span>}
+              </span>
+              <span className="order-detail">{tooPoor ? `${action.detail} · you have only ${coins}` : action.detail}</span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 interface SiegeViewProps {
   siege: Siege
+  /** Whether this castle has never been taken, so orders it introduces are marked new. */
+  firstTime: boolean
   coins: number
   onCoinCall: (call: CoinFace) => void
   onOrder: (actionId: string) => void
@@ -273,13 +407,11 @@ interface SiegeViewProps {
   onLeave: () => void
 }
 
-function SiegeView({ siege, coins, onCoinCall, onOrder, onEventChoice, onLeave }: SiegeViewProps) {
+function SiegeView({ siege, firstTime, coins, onCoinCall, onOrder, onEventChoice, onLeave }: SiegeViewProps) {
   const [confirmRetreat, setConfirmRetreat] = useState(false)
   const advice = siege.practice ? coachAdvice(siege) : null
   const rival = rivalById(siege.rivalId)!
   const { army, estimates, flags } = siege
-  const actions = availableActions(siege)
-  const orders = actions.filter((action) => !action.retreat)
   const phaseIndex = PHASES.findIndex((phase) => phase.id === siege.phase)
   const recentLog = [...siege.log].reverse()
 
@@ -359,6 +491,7 @@ function SiegeView({ siege, coins, onCoinCall, onOrder, onEventChoice, onLeave }
       {advice && (
         <section className="coach-card" aria-live="polite">
           <p className="coach-name">{COACH_NAME}</p>
+          {siege.coin && !siege.event && <p className="coach-phase">{PHASE_GUIDE[siege.phase]}</p>}
           <p className="coach-tip">“{advice.tip}”</p>
         </section>
       )}
@@ -410,7 +543,7 @@ function SiegeView({ siege, coins, onCoinCall, onOrder, onEventChoice, onLeave }
             {eventChoices(siege).map((choice) => {
               const tooPoor = (choice.coinCost ?? 0) > coins
               return (
-                <button key={choice.id} type="button" className="order" disabled={tooPoor} onClick={() => onEventChoice(choice.id)}>
+                <button key={choice.id} type="button" className="order" data-sfx disabled={tooPoor} onClick={() => onEventChoice(choice.id)}>
                   <span className="order-label">{choice.label}</span>
                   {(choice.detail || tooPoor) && <span className="order-detail">{tooPoor ? `You have only ${coins} coins` : choice.detail}</span>}
                 </button>
@@ -419,29 +552,13 @@ function SiegeView({ siege, coins, onCoinCall, onOrder, onEventChoice, onLeave }
           </div>
         </section>
       ) : !siege.coin ? null : (
-        <section aria-label="Your orders">
-          <h3 className="orders-title">Your orders</h3>
-          <div className="orders">
-            {orders.map((action) => {
-              const tooPoor = (action.coinCost ?? 0) > coins
-              return (
-                <button
-                  key={action.id}
-                  type="button"
-                  className={`order${advice?.suggestedActionId === action.id ? ' suggested' : ''}`}
-                  disabled={tooPoor}
-                  onClick={() => onOrder(action.id)}
-                >
-                  <span className="order-label">
-                    {action.label}
-                    {advice?.suggestedActionId === action.id && <span className="suggested-tag">Suggested</span>}
-                  </span>
-                  <span className="order-detail">{tooPoor ? `${action.detail} · you have only ${coins}` : action.detail}</span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
+        <OrdersPanel
+          siege={siege}
+          coins={coins}
+          firstTime={firstTime}
+          suggestedActionId={advice?.suggestedActionId ?? null}
+          onOrder={onOrder}
+        />
       )}
 
       <section className="dispatches" aria-label="Latest dispatches" aria-live="polite">

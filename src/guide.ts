@@ -32,7 +32,7 @@ export const GUIDE_STEPS: readonly GuideStep[] = [
   {
     tab: 'war',
     title: 'The war table',
-    text: 'Finish all of a day’s quests and your army will march once that day. Every lord you defeat opens a chapter of the Chronicle.',
+    text: 'The War opens at level 3. Then, finish all of a day’s quests and your army will march once that day. Every lord you defeat opens a chapter of the Chronicle.',
   },
   {
     tab: 'pets',

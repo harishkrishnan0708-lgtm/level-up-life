@@ -1,0 +1,103 @@
+/* Achievements: the pop-up when one is earned, and the badge collection in the Journal */
+
+.achievement-kicker {
+  margin: 0 0 12px;
+  color: var(--blood-bright);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.achievement-badge {
+  font-size: 18px;
+}
+
+.achievement-flame {
+  display: block;
+  width: 18px;
+  height: 24px;
+}
+
+.achievement-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.achievement-card .achievement-badge.celebration-emblem .achievement-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.achievement-card .achievement-badge.celebration-emblem {
+  font-size: 30px;
+}
+
+.achievement-card .achievement-badge.celebration-emblem .achievement-flame {
+  width: 27px;
+  height: 36px;
+}
+
+.achievement-list {
+  display: grid;
+  gap: 8px;
+  max-height: 46vh;
+  margin: 12px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  text-align: left;
+}
+
+.achievement-list li,
+.achievement-grid li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.achievement-list strong,
+.achievement-grid strong {
+  display: block;
+  color: var(--ember);
+}
+
+.achievement-list span,
+.achievement-grid span {
+  font-size: 13px;
+}
+
+.journal-page .achievement-count {
+  margin: -4px 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.achievement-group + .achievement-group {
+  margin-top: 14px;
+}
+
+.achievement-group h4 {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.achievement-grid {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.achievement-grid li.locked strong {
+  color: var(--muted);
+}
+
+.achievement-grid .achievement-date {
+  color: var(--muted);
+  font-size: 12px;
+}

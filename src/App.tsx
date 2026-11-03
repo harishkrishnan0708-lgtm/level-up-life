@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import AchievementCelebration from './AchievementCelebration'
+import { isMuted, playSound, setMuted, unlockAudio, type SoundName } from './sounds'
+import './Achievements.css'
+import { awardAchievements, newlyEarned, type Achievement } from './achievements'
 import CharacterCreator from './CharacterCreator'
 import EggIcon from './EggIcon'
 import Emblem from './Emblem'
@@ -29,6 +33,7 @@ import {
   scoutAccuracy,
   startingEngines,
   totalMight,
+  warUnlocked,
   type Rival,
   type WarRecord,
 } from './raids'
@@ -45,7 +50,7 @@ import BackupControls from './BackupControls'
 import { availableActions, chooseEventOption, eventChoices, startSiege, takeAction, tossCoin, type CoinFace, type Siege } from './siege'
 import Shop from './Shop'
 import War from './War'
-import { buyItem, shopItem, xpMultiplier, type PurchaseCheck } from './wares'
+import { buyItem, collectFood, packSiegeFood, questBuildingBonus, shopItem, xpMultiplier, type PurchaseCheck } from './wares'
 import {
   activeHero,
   addHero,
@@ -64,8 +69,9 @@ import {
   type Roster,
 } from './hero'
 import QuestBoard from './QuestBoard'
+import WeekSummary from './WeekSummary'
 
-type Screen = { kind: 'main' } | { kind: 'heroes' } | { kind: 'create' } | { kind: 'edit'; heroId: string } | { kind: 'plan' }
+type Screen = { kind: 'main' } | { kind: 'heroes' } | { kind: 'create' } | { kind: 'edit'; heroId: string } | { kind: 'plan' } | { kind: 'week' }
 
 type Tab = 'quests' | 'shop' | 'kingdom' | 'war' | 'pets' | 'journal'
 
@@ -96,10 +102,21 @@ interface RewardToast {
 }
 
 type Celebration =
-  | { kind: 'level'; level: number; companionGrewInto: string | null }
+  | { kind: 'level'; level: number; companionGrewInto: string | null; warOpened: boolean }
   | { kind: 'egg'; egg: Egg; warmthNeeded: number }
   | { kind: 'hatch'; pet: Pet; following: boolean }
   | { kind: 'streak'; days: number; coins: number }
+  | { kind: 'achievements'; achievements: Achievement[] }
+
+const CELEBRATION_SOUNDS: Record<Celebration['kind'], SoundName> = {
+  level: 'levelUp',
+  egg: 'egg',
+  hatch: 'hatch',
+  streak: 'streak',
+  achievements: 'achievement',
+}
+
+const OUTCOME_SOUNDS: Record<NonNullable<Siege['outcome']>['kind'], SoundName> = { victory: 'victory', defeat: 'defeat', stalemate: 'stalemate' }
 
 function App() {
   const [roster, setRoster] = useState(() => loadRoster(window.localStorage, toLocalDay(new Date())))
@@ -114,6 +131,7 @@ function App() {
   const [testLuck, setTestLuck] = useState(readTestLuck)
   const eggRules = testLuck ? TEST_LUCK_RULES : NORMAL_RULES
   const [toast, setToast] = useState<RewardToast | null>(null)
+  const [soundOff, setSoundOff] = useState(isMuted)
   // The first-time tour, shown once per phone; null once it's done or skipped.
   const [guideStep, setGuideStep] = useState<number | null>(() => (guideDone(window.localStorage) ? null : 0))
 
@@ -147,7 +165,45 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [toast])
 
+  // Every button clicks, except the ones that play a sound of their own (marked data-sfx).
+  useEffect(() => {
+    const clickSound = (event: MouseEvent) => {
+      const button = event.target instanceof Element ? event.target.closest('button') : null
+      if (button && !button.hasAttribute('data-sfx')) {
+        playSound('click')
+      }
+    }
+    document.addEventListener('pointerdown', unlockAudio, true)
+    document.addEventListener('click', clickSound, true)
+    return () => {
+      document.removeEventListener('pointerdown', unlockAudio, true)
+      document.removeEventListener('click', clickSound, true)
+    }
+  }, [])
+
+  // Each celebration plays its fanfare as it appears, just after the sound of whatever earned it.
+  const celebrationShown = celebrations[0]
+  useEffect(() => {
+    if (!celebrationShown) {
+      return
+    }
+    const timer = window.setTimeout(() => playSound(CELEBRATION_SOUNDS[celebrationShown.kind]), 150)
+    return () => window.clearTimeout(timer)
+  }, [celebrationShown])
+
   const hero = activeHero(roster)
+
+  // Achievements are checked after every change, so anything that earns one (a quest, a siege, a story choice) pays
+  // out right away, and ones already earned before they existed pay out the first time the game opens.
+  useEffect(() => {
+    const current = activeHero(latestRoster.current)
+    const earned = current ? newlyEarned(current) : []
+    if (!current || earned.length === 0) {
+      return
+    }
+    updateRoster(setHeroProgress(latestRoster.current, current.id, awardAchievements(current, earned, today)))
+    setCelebrations((queue) => [...queue, { kind: 'achievements', achievements: earned }])
+  }, [roster, today])
 
   function showToast(text: string) {
     // A new id restarts the pop animation when actions come quickly.
@@ -165,14 +221,22 @@ function App() {
     window.scrollTo(0, 0)
   }
 
+  function handleSoundToggle(off: boolean) {
+    setMuted(off)
+    setSoundOff(off)
+    playSound('click')
+  }
+
   function handleQuestTap(quest: Quest) {
     const current = activeHero(latestRoster.current)
     if (!current) {
       return
     }
     const wasDone = current.game.completedQuestIds.includes(quest.id)
+    playSound(wasDone ? 'questUndone' : 'questDone')
     const multiplier = xpMultiplier(current.holdings, toLocalDay(new Date())) * petXpMultiplier(current.pets, quest.category)
-    let updatedGame = toggleQuest(current.game, quest.id, current.heroClass, multiplier, allQuests(current.plan))
+    const buildingCoins = questBuildingBonus(current.holdings, quest.id)?.coins ?? 0
+    let updatedGame = toggleQuest(current.game, quest.id, current.heroClass, multiplier, allQuests(current.plan), buildingCoins)
     // Reaching a streak milestone pays out once per streak.
     const streakBefore = currentStreak(current.streak, current.game, current.plan)
     const streakAfter = currentStreak(current.streak, updatedGame, current.plan)
@@ -195,7 +259,8 @@ function App() {
     updateRoster(setHeroProgress(latestRoster.current, current.id, { game: updatedGame, pets: petOutcome.state, streak }))
 
     const xp = Math.abs(updatedGame.totalXp - current.game.totalXp)
-    showToast(wasDone ? `Undone: −${xp} XP · −${quest.coins} coins` : `+${xp} XP · +${quest.coins} coins`)
+    const undoneCoins = quest.coins + (current.game.earnedBonusCoins?.[quest.id] ?? 0)
+    showToast(wasDone ? `Undone: −${xp} XP · −${undoneCoins} coins` : `+${xp} XP · +${quest.coins + buildingCoins} coins`)
 
     const newCelebrations: Celebration[] = []
     if (milestone) {
@@ -206,7 +271,12 @@ function App() {
     if (newLevel > oldLevel) {
       const oldCompanion = companionAt(oldLevel).name
       const newCompanion = companionAt(newLevel).name
-      newCelebrations.push({ kind: 'level', level: newLevel, companionGrewInto: newCompanion === oldCompanion ? null : newCompanion })
+      newCelebrations.push({
+        kind: 'level',
+        level: newLevel,
+        companionGrewInto: newCompanion === oldCompanion ? null : newCompanion,
+        warOpened: !warUnlocked(current.game, current.war) && warUnlocked(updatedGame, current.war),
+      })
     }
     for (const pet of petOutcome.hatched) {
       newCelebrations.push({ kind: 'hatch', pet, following: petOutcome.state.activePetId === pet.id })
@@ -226,7 +296,7 @@ function App() {
     showToast(`${petById(petId)?.name} follows you now`)
   }
 
-  function siegeFor(hero: Hero, rival: Rival, practice: boolean): Siege {
+  function siegeFor(hero: Hero, rival: Rival, practice: boolean, extraFood = 0): Siege {
     return startSiege(
       {
         rival,
@@ -234,6 +304,7 @@ function App() {
         accuracy: scoutAccuracy(hero.holdings),
         engines: startingEngines(hero.holdings),
         practice,
+        extraFood,
       },
       Math.random,
     )
@@ -245,9 +316,11 @@ function App() {
     if (!current || !rival) {
       return
     }
+    const { holdings, food } = packSiegeFood(current.holdings)
     updateRoster(
       setHeroProgress(latestRoster.current, current.id, {
-        war: { ...current.war, lastRaidDay: toLocalDay(new Date()), activeSiege: siegeFor(current, rival, false) },
+        holdings,
+        war: { ...current.war, lastRaidDay: toLocalDay(new Date()), activeSiege: siegeFor(current, rival, false, food) },
       }),
     )
   }
@@ -285,11 +358,11 @@ function App() {
   }
 
   function handleCoinCall(call: CoinFace) {
-    advanceSiege(0, (siege) => tossCoin(siege, call, Math.random))
+    advanceSiege(0, (siege) => tossCoin(siege, call, Math.random), 'coinToss')
   }
 
   /** Applies a siege order or event choice, paying any coins it costs, and banks the result when the siege ends. */
-  function advanceSiege(coinCost: number, advance: (siege: Siege) => Siege) {
+  function advanceSiege(coinCost: number, advance: (siege: Siege) => Siege, sound: SoundName = 'siege') {
     const current = activeHero(latestRoster.current)
     const siege = current?.war.activeSiege
     if (!current || !siege || current.game.coins < coinCost) {
@@ -307,6 +380,7 @@ function App() {
       coins += next.outcome.loot
     }
     updateRoster(setHeroProgress(latestRoster.current, current.id, { war, game: { ...current.game, coins } }))
+    playSound(next.outcome && !siege.outcome ? OUTCOME_SOUNDS[next.outcome.kind] : sound)
     if (coinCost > 0) {
       showToast(`Paid ${coinCost} coins`)
     }
@@ -360,6 +434,7 @@ function App() {
     }
     const outcome = buyItem(current.game, current.holdings, itemId, toLocalDay(new Date()))
     if (outcome.result === 'ok') {
+      playSound('coin')
       const item = shopItem(itemId)
       let next = setHeroProgress(latestRoster.current, current.id, { game: outcome.game, holdings: outcome.holdings })
       // New gear goes straight on; the hero can swap back any time from the editor.
@@ -370,6 +445,17 @@ function App() {
       showToast(item?.equipSlot ? `Equipped: ${item.name}` : `Bought: ${item?.name}`)
     }
     return outcome.result
+  }
+
+  function handleCollectFood() {
+    const current = activeHero(latestRoster.current)
+    if (!current) {
+      return
+    }
+    const holdings = collectFood(current.holdings, current.streak.history, today)
+    playSound('coin')
+    updateRoster(setHeroProgress(latestRoster.current, current.id, { holdings }))
+    showToast(`+${holdings.food - current.holdings.food} food`)
   }
 
   function goToGuideStep(step: number) {
@@ -447,6 +533,15 @@ function App() {
     )
   }
 
+  if (screen.kind === 'week') {
+    return (
+      <main className="app">
+        {saveWarning}
+        <WeekSummary hero={hero} onClose={() => showScreen({ kind: 'main' })} />
+      </main>
+    )
+  }
+
   const heroBeingEdited = screen.kind === 'edit' ? roster.heroes.find((candidate) => candidate.id === screen.heroId) : undefined
   if (heroBeingEdited) {
     return (
@@ -470,6 +565,16 @@ function App() {
       <TabBackdrop tab={tab === 'journal' ? 'kingdom' : tab} />
       <nav className="top-bar">
         <span className="app-name">Level Up Life</span>
+        <button
+          type="button"
+          className="heroes-button sound-button"
+          data-sfx
+          aria-pressed={!soundOff}
+          aria-label={soundOff ? 'Sound is off. Turn sound on' : 'Sound is on. Turn sound off'}
+          onClick={() => handleSoundToggle(!soundOff)}
+        >
+          {soundOff ? '🔇' : '🔊'}
+        </button>
         <button type="button" className="heroes-button" onClick={() => setScreen({ kind: 'heroes' })}>
           Heroes
         </button>
@@ -484,12 +589,13 @@ function App() {
           onQuestTap={handleQuestTap}
           onOpenPets={() => showTab('pets')}
           onPlanWeek={() => showScreen({ kind: 'plan' })}
+          onOpenWeek={() => showScreen({ kind: 'week' })}
           today={today}
         />
       )}
       {/* Keyed by hero so switching heroes resets the merchant's conversation. */}
       {tab === 'shop' && <Shop key={hero.id} hero={hero} today={today} onBuy={handleBuy} />}
-      {tab === 'kingdom' && <Kingdom key={hero.id} hero={hero} onVisitMerchant={() => showTab('shop')} />}
+      {tab === 'kingdom' && <Kingdom key={hero.id} hero={hero} today={today} onVisitMerchant={() => showTab('shop')} onCollectFood={handleCollectFood} />}
       {tab === 'war' && (
         <War
           key={hero.id}
@@ -577,6 +683,7 @@ function App() {
               {celebrations[0].companionGrewInto && (
                 <p className="celebration-companion">Your companion grew into a {celebrations[0].companionGrewInto}!</p>
               )}
+              {celebrations[0].warOpened && <p className="celebration-companion">The War is open! Visit the War tab to take your first castle.</p>}
               <button type="button" className="button-primary full" onClick={dismissCelebration}>
                 Onward
               </button>
@@ -596,6 +703,7 @@ function App() {
               </button>
             </div>
           )}
+          {celebrations[0].kind === 'achievements' && <AchievementCelebration achievements={celebrations[0].achievements} onDone={dismissCelebration} />}
           {celebrations[0].kind === 'egg' && (
             <div className={`celebration-card egg-card rarity-border-${celebrations[0].egg.rarity}`}>
               <EggIcon rarity={celebrations[0].egg.rarity} className="celebration-egg" />

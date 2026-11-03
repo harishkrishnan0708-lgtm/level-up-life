@@ -1,5 +1,5 @@
 import { develop, meets, newCastState, type CastState, type Condition, type Development } from './cast'
-import type { Pose } from './heroPixels'
+import type { Expression, Pose } from './heroPixels'
 import { PRACTICE_RIVAL, rivalById, type WarRecord } from './raids'
 
 /** Who is speaking a line. The narrator has no portrait; the hero's portrait is their own. */
@@ -23,6 +23,10 @@ export interface StoryLine {
   pose?: Pose
   /** Poses held from this line on, e.g. a prisoner bound until freed. */
   poses?: Partial<Record<Actor, Pose>>
+  /** The speaker's expression for this line only. */
+  mood?: Expression
+  /** Expressions held from this line on, e.g. listeners brightening at good news. */
+  moods?: Partial<Record<Actor, Expression>>
   /** Only plays if a character stands where this says, e.g. a line only for a hero who freed Brannoc. */
   when?: Condition
 }
@@ -36,6 +40,17 @@ export const RESTING_POSES: Record<Actor, Pose> = {
   mordrake: 'stand',
   morwen: 'stand',
   gorrak: 'arms-crossed',
+}
+
+/** Each character's face when nothing in particular is happening: Holt's grumpy scowl, Gorrak's hard stare. */
+export const RESTING_MOODS: Record<Actor, Expression> = {
+  hero: 'neutral',
+  holt: 'stern',
+  brannoc: 'neutral',
+  wick: 'neutral',
+  mordrake: 'stern',
+  morwen: 'neutral',
+  gorrak: 'stern',
 }
 
 /** The hidden scores that choices move. Together with the final ultimatum, they decide the ending. */
@@ -117,6 +132,7 @@ export const CHAPTERS: readonly Chapter[] = [
         speaker: 'holt',
         text: 'Seven scratched, two bruised, and one fell off the wall and landed on a deserter. I’m counting that one as a tactic.',
         pose: 'shrug',
+        mood: 'happy',
       },
       {
         speaker: 'narrator',
@@ -127,7 +143,7 @@ export const CHAPTERS: readonly Chapter[] = [
         speaker: 'narrator',
         text: 'You lift a blade into the torchlight. It is light, keen, and perfectly balanced: better than anything your own smith has ever made.',
       },
-      { speaker: 'hero', text: 'Who makes steel like this?', pose: 'think' },
+      { speaker: 'hero', text: 'Who makes steel like this?', pose: 'think', mood: 'surprised' },
       { speaker: 'holt', text: 'Nobody I know, Captain. And I know every smith from here to the sea.', pose: 'shrug' },
       { speaker: 'hero', text: 'Deserters don’t buy new steel. Where did all this come from?', pose: 'think' },
       { speaker: 'holt', text: 'Sixty-three crates. I counted twice. Half these blades are better than ours, and ours were the old king’s best.', pose: 'shrug' },
@@ -136,10 +152,11 @@ export const CHAPTERS: readonly Chapter[] = [
         text: 'Your soldiers drag in the deserters’ captain: a gaunt man with one ear, turning a battered coin over in his bound fingers.',
         cast: ['hero', 'brannoc', 'holt'],
         poses: { brannoc: 'bound' },
+        moods: { brannoc: 'sad' },
       },
       { speaker: 'brannoc', text: 'Brannoc. I marched under the old king’s banner, back when there was a king. This coin’s the last wage he ever paid me.' },
       { speaker: 'brannoc', text: 'The swords were a gift. Came at night, by cart. The man never showed his face. Called himself the Moth.' },
-      { speaker: 'brannoc', text: 'Said he wanted the roads kept dangerous. Laughed when he said it. A dry little laugh, like paper burning.' },
+      { speaker: 'brannoc', text: 'Said he wanted the roads kept dangerous. Laughed when he said it. A dry little laugh, like paper burning.', mood: 'neutral' },
       { speaker: 'holt', text: 'A merchant who gives his wares away. Forty years a soldier, and I’ve never met one of those.', pose: 'talk' },
       { speaker: 'brannoc', text: 'He’ll want paying eventually. That kind always does. Trust me, I know a debt when I see one.' },
       {
@@ -147,7 +164,7 @@ export const CHAPTERS: readonly Chapter[] = [
         text: 'Brannoc glances at his men, bound in the courtyard. Twenty of them, tired and hungry.',
         scene: 'fort-yard',
       },
-      { speaker: 'brannoc', text: 'So, {hero}. What happens to us? I’d flip you for it, but I doubt you’d take the bet.' },
+      { speaker: 'brannoc', text: 'So, {hero}. What happens to us? I’d flip you for it, but I doubt you’d take the bet.', mood: 'happy' },
     ],
     choice: {
       prompt: 'What do you do with the deserters?',
@@ -163,8 +180,8 @@ export const CHAPTERS: readonly Chapter[] = [
             { who: 'holt', bond: -1 },
           ],
           replies: [
-            { speaker: 'hero', text: 'You’ll march under my banner now. Desert me, and the roads will be the least of your worries.', pose: 'point' },
-            { speaker: 'brannoc', text: 'Fair terms. Fairer than we’d have given you. Consider me in your debt.', pose: 'hand-on-heart', poses: { brannoc: 'stand' } },
+            { speaker: 'hero', text: 'You’ll march under my banner now. Desert me, and the roads will be the least of your worries.', pose: 'point', mood: 'stern' },
+            { speaker: 'brannoc', text: 'Fair terms. Fairer than we’d have given you. Consider me in your debt.', pose: 'hand-on-heart', poses: { brannoc: 'stand' }, moods: { brannoc: 'happy' } },
             { speaker: 'holt', text: 'Wonderful. Twenty-one more mouths to feed. I’ll be keeping my good eye on that one, Captain.', pose: 'arms-crossed' },
           ],
         },
@@ -175,8 +192,8 @@ export const CHAPTERS: readonly Chapter[] = [
           outcome: 'You sent Brannoc and his men into the wilds, unarmed.',
           develops: [{ who: 'brannoc', standing: 'free', bond: 1, learn: 'brannoc-debt' }],
           replies: [
-            { speaker: 'hero', text: 'Leave the swords. Leave the fort. If I see you on my roads again, I won’t be this kind.', pose: 'point' },
-            { speaker: 'brannoc', text: 'Unarmed, on roads like these. You’re colder than you look. Still, a debt’s a debt. I won’t forget it.', pose: 'shrug', poses: { brannoc: 'stand' } },
+            { speaker: 'hero', text: 'Leave the swords. Leave the fort. If I see you on my roads again, I won’t be this kind.', pose: 'point', mood: 'stern' },
+            { speaker: 'brannoc', text: 'Unarmed, on roads like these. You’re colder than you look. Still, a debt’s a debt. I won’t forget it.', pose: 'shrug', poses: { brannoc: 'stand' }, mood: 'sad' },
           ],
         },
         {
@@ -189,9 +206,9 @@ export const CHAPTERS: readonly Chapter[] = [
             { who: 'holt', bond: 1 },
           ],
           replies: [
-            { speaker: 'hero', text: 'You robbed travellers and called it a living. The law can decide what that’s worth.', pose: 'arms-crossed' },
-            { speaker: 'brannoc', text: 'The gallows, then. Remember me when the Moth comes to collect from you.', pose: 'fist' },
-            { speaker: 'holt', text: 'A hard call, Captain. Hard, but the law’s the law. The old king would’ve done the same.', pose: 'talk' },
+            { speaker: 'hero', text: 'You robbed travellers and called it a living. The law can decide what that’s worth.', pose: 'arms-crossed', mood: 'stern' },
+            { speaker: 'brannoc', text: 'The gallows, then. Remember me when the Moth comes to collect from you.', pose: 'fist', mood: 'stern' },
+            { speaker: 'holt', text: 'A hard call, Captain. Hard, but the law’s the law. The old king would’ve done the same.', pose: 'talk', mood: 'sad' },
           ],
         },
       ],
@@ -204,6 +221,7 @@ export const CHAPTERS: readonly Chapter[] = [
         scene: 'fort-yard',
         cast: ['holt'],
         poses: { holt: 'think' },
+        moods: { holt: 'sad' },
       },
       { speaker: 'narrator', text: 'On the road home you pass the market, busy as ever. Wick waves you over from his stall.', scene: 'market', cast: [] },
       { speaker: 'wick', text: 'Back from the old fort already, my friend? Victorious, I hope! Victors deserve the finest things, and it so happens I have a few.' },
@@ -247,6 +265,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'holt',
         text: 'Four hundred and six, Captain. Give or take. The old king used to say a soldier who can count the stars can count anything.',
+        mood: 'neutral',
         pose: 'point',
         poses: { holt: 'arms-crossed' },
       },
@@ -254,11 +273,13 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'holt',
         text: 'Forty years. I carried his banner at Harrow Ford, and his shield at the very end. Neither did him much good.',
+        mood: 'sad',
         pose: 'shrug',
       },
       {
         speaker: 'brannoc',
         text: 'Harrow Ford. I was there too, Sergeant. Other side of the river.',
+        mood: 'happy',
         when: { who: 'brannoc', standing: ['ally'] },
         cast: ['hero', 'brannoc', 'holt'],
         pose: 'shrug',
@@ -266,6 +287,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'holt',
         text: '…Were you, now. Then you owe me a pair of boots, deserter. I lost mine in that river.',
+        mood: 'happy',
         when: { who: 'brannoc', standing: ['ally'] },
         pose: 'talk',
       },
@@ -275,7 +297,7 @@ export const CHAPTERS: readonly Chapter[] = [
         cast: ['hero', 'holt'],
       },
       { speaker: 'hero', text: 'You’re always holding that bird.', pose: 'think' },
-      { speaker: 'holt', text: 'Am I? Habit, Captain. Same as the counting.', pose: 'shrug' },
+      { speaker: 'holt', text: 'Am I? Habit, Captain. Same as the counting.', pose: 'shrug', mood: 'surprised' },
     ],
     choice: {
       prompt: 'What do you say to Holt?',
@@ -287,8 +309,8 @@ export const CHAPTERS: readonly Chapter[] = [
           outcome: 'You shared a drink with Holt and let him tell his old war stories.',
           develops: [{ who: 'holt', bond: 1 }],
           replies: [
-            { speaker: 'hero', text: 'Tell me about Harrow Ford, then. The real version.', pose: 'talk' },
-            { speaker: 'holt', text: 'Ha. The real version has more mud and fewer heroes. Pour, Captain, and I’ll tell it.', pose: 'talk' },
+            { speaker: 'hero', text: 'Tell me about Harrow Ford, then. The real version.', pose: 'talk', mood: 'happy' },
+            { speaker: 'holt', text: 'Ha. The real version has more mud and fewer heroes. Pour, Captain, and I’ll tell it.', pose: 'talk', mood: 'happy' },
             { speaker: 'narrator', text: 'He talks until the fire burns low. Not once does he mention the bird again.' },
           ],
         },
@@ -303,9 +325,10 @@ export const CHAPTERS: readonly Chapter[] = [
             {
               speaker: 'holt',
               text: 'My son. A long time ago. He was better with a knife than a sword. It didn’t save him.',
+              mood: 'sad',
               pose: 'stand',
             },
-            { speaker: 'holt', text: 'Goodnight, Captain.', pose: 'stand' },
+            { speaker: 'holt', text: 'Goodnight, Captain.', pose: 'stand', mood: 'sad' },
             {
               speaker: 'narrator',
               text: 'He walks off into the dark. Later, from the far side of camp, you hear him counting under his breath.',
@@ -363,11 +386,12 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'mordrake',
         text: 'Ah. The conqueror. Do sit, if you like. I’m told it’s customary to be gracious in defeat, though I confess I’ve had very little practice.',
+        mood: 'happy',
         pose: 'talk',
       },
       { speaker: 'hero', text: 'You armed for war all spring. Against whom?', pose: 'think' },
       { speaker: 'mordrake', text: 'Against the Ash Witch, of course. Letter after letter, all winter: she was gathering an army in the fen.', pose: 'point' },
-      { speaker: 'mordrake', text: 'Unsigned, every one. I took it for a friend’s discretion.', pose: 'shrug' },
+      { speaker: 'mordrake', text: 'Unsigned, every one. I took it for a friend’s discretion.', pose: 'shrug', mood: 'sad' },
       {
         speaker: 'narrator',
         text: 'He slides a stack of letters down the table. Every seal is the same: a tiny moth, pressed in grey wax.',
@@ -381,22 +405,26 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'mordrake',
         text: 'Every one the same. Patient. Polite. Never once asking for anything, until the steel arrived, and the bill with it.',
+        mood: 'sad',
         pose: 'shrug',
       },
       { speaker: 'holt', text: 'Same hand on every one, Captain. Neat. Practised. Somebody writes a great many letters.', pose: 'think' },
       {
         speaker: 'mordrake',
         text: 'I served the old king, you know, before the end. When he fell, I swore I would never again be caught unready. You see how well that went.',
+        mood: 'sad',
         pose: 'hand-on-heart',
       },
       {
         speaker: 'mordrake',
         text: 'So I bought steel. A great deal of it, from the very man who wrote these, I now suspect. I am an old fool, conqueror, but I am not a liar.',
+        mood: 'sad',
         pose: 'hand-on-heart',
       },
       {
         speaker: 'brannoc',
         text: 'Funny. The Moth told my lads the Witch was coming for them too. Busy fellow.',
+        mood: 'happy',
         when: { who: 'brannoc', standing: ['ally'] },
         cast: ['hero', 'brannoc', 'mordrake', 'holt'],
         pose: 'shrug',
@@ -407,15 +435,16 @@ export const CHAPTERS: readonly Chapter[] = [
         cast: ['hero', 'mordrake', 'holt'],
         poses: { holt: 'think' },
       },
-      { speaker: 'holt', text: 'Two hundred and twelve.' },
-      { speaker: 'hero', text: 'Two hundred and twelve what?', pose: 'think' },
+      { speaker: 'holt', text: 'Two hundred and twelve.', mood: 'neutral' },
+      { speaker: 'hero', text: 'Two hundred and twelve what?', pose: 'think', mood: 'surprised' },
       {
         speaker: 'holt',
         text: 'Hm? Nothing, Captain. Old habit. Counting the stones in the wall.',
+        mood: 'surprised',
         pose: 'shrug',
         poses: { holt: 'arms-crossed' },
       },
-      { speaker: 'mordrake', text: 'So. What becomes of the Grey Keep, and of its foolish old baron?', pose: 'stand' },
+      { speaker: 'mordrake', text: 'So. What becomes of the Grey Keep, and of its foolish old baron?', pose: 'stand', mood: 'sad' },
     ],
     choice: {
       prompt: 'What do you do with Baron Mordrake?',
@@ -434,14 +463,16 @@ export const CHAPTERS: readonly Chapter[] = [
             {
               speaker: 'hero',
               text: 'Keep your hall, Baron. But your steel answers to me now, and so do your letters. If another moth arrives, I want it.',
+              mood: 'stern',
               pose: 'point',
             },
             {
               speaker: 'mordrake',
               text: 'Generous. Unwisely generous, perhaps. But I do not forget generosity. I shall watch for moths.',
+              mood: 'happy',
               pose: 'hand-on-heart',
             },
-            { speaker: 'holt', text: 'A lord who owes you his life is worth ten who don’t, Captain. Usually.', pose: 'talk' },
+            { speaker: 'holt', text: 'A lord who owes you his life is worth ten who don’t, Captain. Usually.', pose: 'talk', mood: 'neutral' },
           ],
         },
         {
@@ -451,10 +482,11 @@ export const CHAPTERS: readonly Chapter[] = [
           outcome: 'You took the Grey Keep and sent Baron Mordrake into exile.',
           develops: [{ who: 'mordrake', standing: 'free', bond: -1 }],
           replies: [
-            { speaker: 'hero', text: 'The Grey Keep is mine. Take a horse and go, and don’t come back.', pose: 'point' },
+            { speaker: 'hero', text: 'The Grey Keep is mine. Take a horse and go, and don’t come back.', pose: 'point', mood: 'stern' },
             {
               speaker: 'mordrake',
               text: 'Exile. At my age. Well, the roads are full of old men with grievances. I shall be in good company.',
+              mood: 'sad',
               pose: 'shrug',
             },
             { speaker: 'holt', text: 'Cold, Captain. But clean.', pose: 'arms-crossed' },
@@ -470,7 +502,7 @@ export const CHAPTERS: readonly Chapter[] = [
             { who: 'holt', bond: -1 },
           ],
           replies: [
-            { speaker: 'hero', text: 'You bought the steel and you raised the army. That makes the war yours.', pose: 'arms-crossed' },
+            { speaker: 'hero', text: 'You bought the steel and you raised the army. That makes the war yours.', pose: 'arms-crossed', mood: 'stern' },
             {
               speaker: 'mordrake',
               text: 'Then let it be quick. And, conqueror: read your own letters closely. Whoever wrote mine knows your name too.',
@@ -479,6 +511,7 @@ export const CHAPTERS: readonly Chapter[] = [
             {
               speaker: 'holt',
               text: 'Done is done, Captain. I’ve watched kings hang men for less. I’ve never liked it.',
+              mood: 'sad',
               pose: 'talk',
             },
           ],
@@ -529,9 +562,9 @@ export const CHAPTERS: readonly Chapter[] = [
         text: 'You walk the last mile on foot. Your boots sink in ash, and here and there you pass the black shells of houses.',
         cast: ['hero', 'holt'],
       },
-      { speaker: 'holt', text: 'Forty-four huts on the old maps, Captain. I count one. The rest are ash.', pose: 'point' },
+      { speaker: 'holt', text: 'Forty-four huts on the old maps, Captain. I count one. The rest are ash.', pose: 'point', mood: 'sad' },
       { speaker: 'narrator', text: 'Outside one of the shells lies a child’s doll, burned down to the wire.' },
-      { speaker: 'hero', text: 'This wasn’t an army’s work.', pose: 'think' },
+      { speaker: 'hero', text: 'This wasn’t an army’s work.', pose: 'think', mood: 'sad' },
       {
         speaker: 'narrator',
         text: 'The Ash Witch waits on the steps of that last hut, a glass jar of moths in her hand. She does not bow.',
@@ -540,10 +573,11 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'morwen',
         text: 'So you’re the one who knocked down my last wall. Congratulations, conqueror. It was the only one still standing.',
+        mood: 'stern',
         pose: 'talk',
       },
       { speaker: 'hero', text: 'Baron Mordrake swore you were raising an army against him.', pose: 'think' },
-      { speaker: 'morwen', text: 'An army. Look around you. Does this look like a woman with an army?', pose: 'shrug' },
+      { speaker: 'morwen', text: 'An army. Look around you. Does this look like a woman with an army?', pose: 'shrug', mood: 'stern' },
       {
         speaker: 'morwen',
         text: 'Two winters ago a trader sold me oil that never burns down. “Everlasting,” he called it. Light your fen through the longest night.',
@@ -552,16 +586,19 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'morwen',
         text: 'It burned, all right. It burned everything. My garden, my neighbours, my mother’s house. It would not go out.',
+        mood: 'sad',
         pose: 'fist',
       },
       {
         speaker: 'morwen',
         text: 'I went to town for help. New lamps, new oil, new everything. Nobody had ever seen my trader. Nobody ever does.',
+        mood: 'sad',
         pose: 'shrug',
       },
       {
         speaker: 'morwen',
         text: 'I’ve hunted him ever since. Moths fly toward his kind of fire, so I keep moths. Every night I let one go and follow it.',
+        mood: 'stern',
       },
       { speaker: 'hero', text: 'And where do they fly?', pose: 'think' },
       { speaker: 'narrator', text: 'She uncorks the jar. A moth climbs out, circles her hand once, and flies off over the black water.' },
@@ -569,6 +606,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'brannoc',
         text: 'So the “witch” got robbed by the same man as the rest of us. Makes a change from witches doing the robbing.',
+        mood: 'happy',
         when: { who: 'brannoc', standing: ['ally'] },
         cast: ['hero', 'brannoc', 'morwen', 'holt'],
         pose: 'shrug',
@@ -578,14 +616,14 @@ export const CHAPTERS: readonly Chapter[] = [
         text: 'Morwen’s gaze moves past you and settles on Holt. It stays there a moment too long.',
         cast: ['hero', 'morwen', 'holt'],
       },
-      { speaker: 'morwen', text: 'Some free advice, since you’ve taken everything else. One of yours lies to you. Every single day.', pose: 'talk' },
+      { speaker: 'morwen', text: 'Some free advice, since you’ve taken everything else. One of yours lies to you. Every single day.', pose: 'talk', mood: 'happy' },
       {
         speaker: 'holt',
         text: 'Mind your tongue, witch. Captain, she’d say anything to save her neck.',
         pose: 'fist',
       },
-      { speaker: 'morwen', text: 'Would I? Well. You’ll find out, one way or the other.', pose: 'shrug' },
-      { speaker: 'morwen', text: 'So, conqueror. Burn the last of me, or don’t. Decide.', pose: 'stand' },
+      { speaker: 'morwen', text: 'Would I? Well. You’ll find out, one way or the other.', pose: 'shrug', mood: 'happy' },
+      { speaker: 'morwen', text: 'So, conqueror. Burn the last of me, or don’t. Decide.', pose: 'stand', mood: 'stern' },
     ],
     choice: {
       prompt: 'What do you do with the Ash Witch?',
@@ -606,10 +644,11 @@ export const CHAPTERS: readonly Chapter[] = [
               text: 'Help me find him. Your moths and my army. Whatever he did to your fen, he’s doing to every kingdom in reach.',
               pose: 'hand-on-heart',
             },
-            { speaker: 'morwen', text: '…You’re a strange sort of conqueror. Fine. I keep my moths, and you keep your sergeant away from my hut.', pose: 'talk' },
+            { speaker: 'morwen', text: '…You’re a strange sort of conqueror. Fine. I keep my moths, and you keep your sergeant away from my hut.', pose: 'talk', mood: 'surprised' },
             {
               speaker: 'morwen',
               text: 'Oh, and {hero}? You might want to wash. You’ve got half my fen on your face.',
+              mood: 'happy',
               pose: 'point',
             },
             { speaker: 'holt', text: 'Your call, Captain. I’ll be counting the silverware.', pose: 'arms-crossed' },
@@ -622,9 +661,9 @@ export const CHAPTERS: readonly Chapter[] = [
           outcome: 'You left the Ash Witch to rebuild the Cinder Fen in peace.',
           develops: [{ who: 'morwen', standing: 'free', bond: 1 }],
           replies: [
-            { speaker: 'hero', text: 'Rebuild. Nobody troubles the fen again while I hold these lands.', pose: 'talk' },
-            { speaker: 'morwen', text: 'Kind. Unexpected. If my moths find him first, I’ll send one your way.', pose: 'shrug' },
-            { speaker: 'holt', text: 'Sensible, Captain. Witches and soldiers don’t mix.', pose: 'talk' },
+            { speaker: 'hero', text: 'Rebuild. Nobody troubles the fen again while I hold these lands.', pose: 'talk', mood: 'happy' },
+            { speaker: 'morwen', text: 'Kind. Unexpected. If my moths find him first, I’ll send one your way.', pose: 'shrug', mood: 'surprised' },
+            { speaker: 'holt', text: 'Sensible, Captain. Witches and soldiers don’t mix.', pose: 'talk', mood: 'neutral' },
           ],
         },
         {
@@ -637,8 +676,8 @@ export const CHAPTERS: readonly Chapter[] = [
             { who: 'holt', bond: 1 },
           ],
           replies: [
-            { speaker: 'hero', text: 'Take your jars and go. The fen is mine now.', pose: 'point' },
-            { speaker: 'morwen', text: 'Of course it is. Everything is somebody’s. Enjoy the ashes.', pose: 'fist' },
+            { speaker: 'hero', text: 'Take your jars and go. The fen is mine now.', pose: 'point', mood: 'stern' },
+            { speaker: 'morwen', text: 'Of course it is. Everything is somebody’s. Enjoy the ashes.', pose: 'fist', mood: 'stern' },
             { speaker: 'holt', text: 'Good riddance, Captain. Lies, she says. Lies about our own.', pose: 'arms-crossed' },
           ],
         },
@@ -684,10 +723,11 @@ export const CHAPTERS: readonly Chapter[] = [
         cast: ['hero'],
       },
       { speaker: 'narrator', text: 'At the edge of the firelight, a broad figure with a pipe is slipping away into the dark.' },
-      { speaker: 'hero', text: 'Holt? Where are you off to at this hour?', pose: 'think' },
+      { speaker: 'hero', text: 'Holt? Where are you off to at this hour?', pose: 'think', mood: 'surprised' },
       {
         speaker: 'holt',
         text: 'Checking the sentries, Captain. Thirty-two of them, and someone has to.',
+        mood: 'neutral',
         cast: ['hero', 'holt'],
         pose: 'talk',
       },
@@ -695,6 +735,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'brannoc',
         text: 'Your sergeant goes for a lot of walks, Captain. Just saying. A man who collects debts learns to notice things.',
+        mood: 'stern',
         when: { who: 'brannoc', standing: ['ally'] },
         cast: ['hero', 'brannoc'],
         pose: 'shrug',
@@ -702,6 +743,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'morwen',
         text: 'Can’t sleep either, conqueror? Come here. I want to show you something.',
+        mood: 'happy',
         when: { who: 'morwen', standing: ['ally'] },
         cast: ['hero', 'morwen'],
         pose: 'talk',
@@ -720,6 +762,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'morwen',
         text: '…You’re still here. Most people get bored of moths.',
+        mood: 'surprised',
         when: { who: 'morwen', standing: ['ally'] },
         pose: 'shrug',
       },
@@ -741,7 +784,7 @@ export const CHAPTERS: readonly Chapter[] = [
               cast: ['hero'],
             },
             { speaker: 'narrator', text: 'When you get back, he is already by the fire, as if he had never left.' },
-            { speaker: 'holt', text: 'Sentries all present, Captain. Thirty-two.', cast: ['hero', 'holt'], pose: 'talk' },
+            { speaker: 'holt', text: 'Sentries all present, Captain. Thirty-two.', cast: ['hero', 'holt'], pose: 'talk', mood: 'neutral' },
           ],
         },
         {
@@ -763,8 +806,8 @@ export const CHAPTERS: readonly Chapter[] = [
           outcome: 'You stayed up by the fire with Morwen, watching her moths fly toward town.',
           develops: [{ who: 'morwen', bond: 1, romance: 2 }],
           replies: [
-            { speaker: 'hero', text: 'Show me another one.', cast: ['hero', 'morwen'], pose: 'talk' },
-            { speaker: 'morwen', text: '…Fine. But if you tell anyone I enjoyed this, I’ll deny it.', pose: 'shrug' },
+            { speaker: 'hero', text: 'Show me another one.', cast: ['hero', 'morwen'], pose: 'talk', mood: 'happy' },
+            { speaker: 'morwen', text: '…Fine. But if you tell anyone I enjoyed this, I’ll deny it.', pose: 'shrug', mood: 'happy' },
             {
               speaker: 'narrator',
               text: 'You watch moths together until the sky turns grey. Somewhere in the night Holt comes back to camp. Neither of you notices.',
@@ -796,7 +839,7 @@ export const CHAPTERS: readonly Chapter[] = [
         text: 'Your riders pick their way through the camp: cold cookfires, abandoned saddles, a hundred tethered horses stamping in the wind.',
         cast: ['hero', 'holt'],
       },
-      { speaker: 'hero', text: 'Where are all his riders?', pose: 'think' },
+      { speaker: 'hero', text: 'Where are all his riders?', pose: 'think', mood: 'surprised' },
       {
         speaker: 'holt',
         text: 'Ran when their pay stopped coming, most of them. Gold buys a horde fast, Captain, and loses it faster.',
@@ -815,10 +858,11 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'gorrak',
         text: 'Ha! Gorrak is beaten! Nobody has beaten Gorrak since Gorrak was a boy. Gorrak is almost glad to meet you.',
+        mood: 'happy',
         pose: 'shrug',
       },
       { speaker: 'hero', text: 'Your riders were well paid, for a horde with no granaries.', pose: 'think' },
-      { speaker: 'gorrak', text: 'Paid in gold! Good gold. Fresh from the mint, still bright.', pose: 'fist' },
+      { speaker: 'gorrak', text: 'Paid in gold! Good gold. Fresh from the mint, still bright.', pose: 'fist', mood: 'happy' },
       {
         speaker: 'narrator',
         text: 'He flicks you a coin. It is heavy and bright, as if struck yesterday. Pressed into its face is a tiny moth.',
@@ -826,16 +870,19 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'holt',
         text: 'That’s not right, Captain. No kingdom has minted gold in twenty years. Not since the old king fell.',
+        mood: 'surprised',
         pose: 'think',
       },
       {
         speaker: 'gorrak',
         text: 'A soft-voiced trader brought chests of it. He said: ride west, take what you like, there is plenty more where this came from.',
+        mood: 'neutral',
         pose: 'talk',
       },
       {
         speaker: 'brannoc',
         text: 'Same as my lot. Swords for the deserters, gold for the horse lords. He’s buying everyone.',
+        mood: 'stern',
         when: { who: 'brannoc', standing: ['ally'] },
         cast: ['hero', 'brannoc', 'gorrak', 'holt'],
         pose: 'shrug',
@@ -843,6 +890,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'morwen',
         text: 'And oil for me. One man, every side. He isn’t starting wars. He’s farming them.',
+        mood: 'stern',
         when: { who: 'morwen', standing: ['ally'] },
         cast: ['hero', 'morwen', 'gorrak', 'holt'],
         pose: 'point',
@@ -850,11 +898,12 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'hero',
         text: 'Swords for the deserters. Letters and steel for Mordrake. Oil for the fen. Gold for you. The Moth has armed every side.',
+        mood: 'stern',
         cast: ['hero', 'gorrak', 'holt'],
         pose: 'fist',
       },
       { speaker: 'gorrak', text: 'Then Gorrak was a fool’s dog, and the fool was not Gorrak.', pose: 'arms-crossed' },
-      { speaker: 'gorrak', text: 'So. What will you do with Gorrak, little conqueror?', pose: 'stand' },
+      { speaker: 'gorrak', text: 'So. What will you do with Gorrak, little conqueror?', pose: 'stand', mood: 'happy' },
     ],
     choice: {
       prompt: 'What do you do with Gorrak and his horde?',
@@ -870,16 +919,16 @@ export const CHAPTERS: readonly Chapter[] = [
             { who: 'holt', bond: 1 },
           ],
           replies: [
-            { speaker: 'hero', text: 'Get up, then. Your strongest against mine, and I’m the strongest I’ve got.', pose: 'fist' },
-            { speaker: 'gorrak', text: 'Ha! Gorrak likes you. Gorrak will go easy on you. Gorrak lies, of course.', pose: 'talk' },
+            { speaker: 'hero', text: 'Get up, then. Your strongest against mine, and I’m the strongest I’ve got.', pose: 'fist', mood: 'stern' },
+            { speaker: 'gorrak', text: 'Ha! Gorrak likes you. Gorrak will go easy on you. Gorrak lies, of course.', pose: 'talk', mood: 'happy' },
             {
               speaker: 'narrator',
               text: 'A ring of riders gathers, drumming their saddles. Gorrak swings first, and the great axe hums past your ear.',
             },
-            { speaker: 'holt', text: 'Low, Captain! He leans when he swings!', pose: 'point' },
+            { speaker: 'holt', text: 'Low, Captain! He leans when he swings!', pose: 'point', mood: 'surprised' },
             { speaker: 'narrator', text: 'It is short, loud, and brutal. When it’s over, Gorrak lies on his back in the grass, laughing at the sky.' },
-            { speaker: 'gorrak', text: 'Ha! Gorrak’s horde rides for you now. Point Gorrak at this Moth.', pose: 'hand-on-heart' },
-            { speaker: 'holt', text: 'Nine hundred riders and their appetites. I’ll need a bigger ledger, Captain.', pose: 'talk' },
+            { speaker: 'gorrak', text: 'Ha! Gorrak’s horde rides for you now. Point Gorrak at this Moth.', pose: 'hand-on-heart', mood: 'happy' },
+            { speaker: 'holt', text: 'Nine hundred riders and their appetites. I’ll need a bigger ledger, Captain.', pose: 'talk', mood: 'happy' },
           ],
         },
         {
@@ -896,6 +945,7 @@ export const CHAPTERS: readonly Chapter[] = [
             {
               speaker: 'gorrak',
               text: 'Gold is gold. But a man who fights for coin fights for nothing. Gorrak learned that today.',
+              mood: 'sad',
               pose: 'shrug',
             },
             { speaker: 'holt', text: 'Gold buys riders, Captain. It doesn’t buy loyalty. Ask the Moth.', pose: 'arms-crossed' },
@@ -908,13 +958,14 @@ export const CHAPTERS: readonly Chapter[] = [
           outcome: 'You broke Gorrak’s horde and sent his riders home across the steppe.',
           develops: [{ who: 'gorrak', standing: 'free', bond: -1 }],
           replies: [
-            { speaker: 'hero', text: 'No more riding west. Take your riders home, every one of them.', pose: 'point' },
+            { speaker: 'hero', text: 'No more riding west. Take your riders home, every one of them.', pose: 'point', mood: 'stern' },
             {
               speaker: 'gorrak',
               text: 'Home. Gorrak has not been home in eleven winters. …Perhaps it is time.',
+              mood: 'sad',
               pose: 'arms-crossed',
             },
-            { speaker: 'holt', text: 'Fewer mouths. I approve, Captain.', pose: 'talk' },
+            { speaker: 'holt', text: 'Fewer mouths. I approve, Captain.', pose: 'talk', mood: 'happy' },
           ],
         },
       ],
@@ -929,6 +980,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'morwen',
         text: 'Four lords. One moth. We’re close now, {hero}. I can feel it, like heat before a fire.',
+        mood: 'stern',
         when: { who: 'morwen', standing: ['ally'] },
         cast: ['hero', 'morwen'],
         pose: 'talk',
@@ -936,6 +988,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'gorrak',
         text: 'Gorrak has never slept so well after losing. Wake Gorrak when there is someone to hit.',
+        mood: 'happy',
         when: { who: 'gorrak', standing: ['ally'] },
         cast: ['hero', 'gorrak'],
         pose: 'arms-crossed',
@@ -946,7 +999,7 @@ export const CHAPTERS: readonly Chapter[] = [
         cast: ['holt'],
         poses: { holt: 'think' },
       },
-      { speaker: 'holt', text: 'Two hundred and forty.' },
+      { speaker: 'holt', text: 'Two hundred and forty.', mood: 'neutral' },
       { speaker: 'narrator', text: 'You return to the market a conqueror four times over, and the whole square turns to look.', scene: 'market', cast: [] },
       {
         speaker: 'wick',
@@ -1062,21 +1115,30 @@ export interface Staging {
   cast: Actor[]
   /** What each character on stage is doing at this line. */
   poses: Record<Actor, Pose>
+  /** How each character on stage looks at this line. */
+  moods: Record<Actor, Expression>
 }
 
-/** Where the story stands at a given line: the latest scene, cast, and held poses, plus the speaker's pose for the line. */
+/**
+ * Where the story stands at a given line: the latest scene, cast, and held poses and moods, plus the speaker's pose and
+ * mood for the line.
+ */
 export function stagingAt(lines: readonly StoryLine[], index: number): Staging {
   let scene: SceneId = 'fort-yard'
   let cast: Actor[] = []
-  let held: Record<Actor, Pose> = { ...RESTING_POSES }
+  let heldPoses: Record<Actor, Pose> = { ...RESTING_POSES }
+  let heldMoods: Record<Actor, Expression> = { ...RESTING_MOODS }
   for (const line of lines.slice(0, index + 1)) {
     scene = line.scene ?? scene
     cast = line.cast ?? cast
-    held = { ...held, ...line.poses }
+    heldPoses = { ...heldPoses, ...line.poses }
+    heldMoods = { ...heldMoods, ...line.moods }
   }
   const line = lines[index]
-  const poses = line?.pose && line.speaker !== 'narrator' ? { ...held, [line.speaker]: line.pose } : held
-  return { scene, cast, poses }
+  const speaker = line && line.speaker !== 'narrator' ? line.speaker : null
+  const poses = speaker && line.pose ? { ...heldPoses, [speaker]: line.pose } : heldPoses
+  const moods = speaker && line.mood ? { ...heldMoods, [speaker]: line.mood } : heldMoods
+  return { scene, cast, poses, moods }
 }
 
 /** Records a choice; choices are final, so a second one for the same chapter is ignored. */

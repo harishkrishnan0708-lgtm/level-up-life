@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { QUESTS, newGame } from './game'
-import { RIVALS, newWarRecord, raidReadiness, recordRaid, scoutAccuracy, type Rival } from './raids'
+import { PRACTICE_RIVAL, RIVALS, newWarRecord, raidReadiness, recordRaid, scoutAccuracy, type Rival } from './raids'
 import {
   availableActions,
   chooseEventOption,
+  isNewOrder,
   reliefBattleChance,
   sanitizeSiege,
   sanitizeWarRecord,
@@ -121,10 +122,28 @@ describe('siege rules', () => {
   // A random number under 0.5 makes the coin land heads, so calling heads wins the toss.
   const fresh = () => tossCoin(startSiege({ rival, might: 3, accuracy: 0.7, engines: 0 }, seeded(1)), 'heads', () => 0.1)
 
-  it('starts on the approach, with the bribe and the routes on offer', () => {
+  it('starts on the approach, with the routes on offer', () => {
     const ids = availableActions(fresh()).map((action) => action.id)
-    expect(ids).toEqual(expect.arrayContaining(['scout', 'informant', 'road', 'forest', 'river', 'retreat']))
-    expect(availableActions(fresh()).find((action) => action.id === 'informant')?.coinCost).toBe(rival.informantCost)
+    expect(ids).toEqual(expect.arrayContaining(['scout', 'road', 'forest', 'river', 'retreat']))
+  })
+
+  it('starts with the extra food the kingdom sends, and says so', () => {
+    const fed = startSiege({ rival, might: 3, accuracy: 0.7, engines: 0, extraFood: 5 }, seeded(1))
+    expect(fed.army.supplies).toBe(startSiege({ rival, might: 3, accuracy: 0.7, engines: 0 }, seeded(1)).army.supplies + 5)
+    expect(fed.log.some(({ text }) => text.includes('5 extra days of food'))).toBe(true)
+  })
+
+  it('offers more orders at each castle, marking the ones that castle introduces', () => {
+    const approach = (target: Rival) => tossCoin(startSiege({ rival: target, might: 3, accuracy: 0.7, engines: 0 }, seeded(1)), 'heads', () => 0.1)
+    const [mordrake, witch] = RIVALS
+    expect(availableActions(approach(PRACTICE_RIVAL)).map((action) => action.id)).toEqual(['scout', 'road', 'river', 'retreat'])
+    expect(availableActions(approach(mordrake)).map((action) => action.id)).not.toContain('informant')
+    const bribe = availableActions(approach(witch)).find((action) => action.id === 'informant')
+    expect(bribe?.coinCost).toBe(witch.informantCost)
+    expect(isNewOrder(approach(mordrake), 'forest')).toBe(true)
+    expect(isNewOrder(approach(mordrake), 'road')).toBe(false)
+    expect(isNewOrder(approach(witch), 'informant')).toBe(true)
+    expect(isNewOrder(approach(witch), 'forest')).toBe(false)
   })
 
   it('tells the truth and reveals a secret way in when you bribe an informant', () => {

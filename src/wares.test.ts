@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { newGame, toggleQuest, type GameState } from './game'
+import { QUESTS, newGame, toggleQuest, type GameState } from './game'
 import { GEAR_SLOT_OPTIONS } from './hero'
 import {
+  BUILDING_QUEST_COINS,
   KINGDOM_SIZE,
   MAX_CANDLES,
   SHOP_ITEMS,
+  FOOD_STORE_LIMIT,
   addDays,
+  buildingBonuses,
   buyItem,
+  collectFood,
+  foodReady,
   newHoldings,
+  packSiegeFood,
   placedBuildings,
+  questBuildingBonus,
   sanitizeHoldings,
   shopItem,
   stockForDay,
@@ -178,5 +185,75 @@ describe('candles of respite', () => {
     }
     expect(holdings.candles).toBe(MAX_CANDLES)
     expect(game.coins).toBe(1000 - MAX_CANDLES * candle.price)
+  })
+})
+
+describe('building bonuses', () => {
+  const withForge = { ...newHoldings('2026-11-03'), buildings: { forge: 1 } }
+
+  it('rewards a quest only once its building is owned', () => {
+    expect(questBuildingBonus(newHoldings('2026-11-03'), 'lift')).toBeNull()
+    expect(questBuildingBonus(withForge, 'lift')?.coins).toBe(BUILDING_QUEST_COINS)
+    expect(questBuildingBonus(withForge, 'water')).toBeNull()
+  })
+
+  it('pays the bonus with the quest, and undo takes back exactly what was paid, even if the building came later', () => {
+    const start = newGame('2026-11-03')
+    const paid = toggleQuest(start, 'lift', 'mage', 1, QUESTS, BUILDING_QUEST_COINS)
+    expect(paid.coins - start.coins).toBe(10 + BUILDING_QUEST_COINS)
+    expect(toggleQuest(paid, 'lift', 'mage').coins).toBe(start.coins)
+    const beforeBuilding = toggleQuest({ ...start, coins: 50 }, 'lift', 'mage')
+    expect(toggleQuest(beforeBuilding, 'lift', 'mage', 1, QUESTS, BUILDING_QUEST_COINS).coins).toBe(50)
+  })
+
+  it('describes what every building does, and leaves purely decorative ones empty', () => {
+    expect(buildingBonuses(shopItem('forge')!)).toEqual([
+      '+2 coins each time you finish “Lift at the gym”',
+      'Makes 1 food each day you keep your streak',
+      'You start every siege with a trebuchet',
+    ])
+    expect(buildingBonuses(shopItem('keep')!)).toEqual(['20 more soldiers in every siege'])
+    expect(buildingBonuses(shopItem('pine')!)).toEqual([])
+  })
+
+  it('gives every default quest a building', () => {
+    for (const quest of QUESTS) {
+      const anyBuilding = SHOP_ITEMS.filter((item) => item.tiles).reduce((holdings, item) => ({ ...holdings, buildings: { ...holdings.buildings, [item.id]: 1 } }), newHoldings('2026-11-03'))
+      expect(questBuildingBonus(anyBuilding, quest.id), quest.id).not.toBeNull()
+    }
+  })
+})
+
+describe('food production', () => {
+  const today = '2026-11-10'
+  const start = { ...newHoldings('2026-11-03'), buildings: { forge: 1, fountain: 1, pine: 1 } }
+  const history = { '2026-11-03': 'kept', '2026-11-04': 'missed', '2026-11-05': 'saved', '2026-11-06': 'kept', '2026-11-10': 'kept' }
+
+  it('makes food on finished kept days only, from buildings with a quest bonus', () => {
+    expect(foodReady(start, history, today)).toBe(4)
+    expect(foodReady(newHoldings('2026-11-03'), history, today)).toBe(0)
+  })
+
+  it('can only be collected once', () => {
+    const collected = collectFood(start, history, today)
+    expect(collected.food).toBe(4)
+    expect(foodReady(collected, history, today)).toBe(0)
+    expect(collectFood(collected, history, today).food).toBe(4)
+  })
+
+  it('stops at what the store can hold', () => {
+    const nearlyFull = { ...start, food: FOOD_STORE_LIMIT - 1 }
+    expect(foodReady(nearlyFull, history, today)).toBe(1)
+    expect(collectFood(nearlyFull, history, today).food).toBe(FOOD_STORE_LIMIT)
+  })
+
+  it('sends at most 5 food with a siege, keeping the rest', () => {
+    expect(packSiegeFood({ ...start, food: 12 })).toMatchObject({ food: 5, holdings: { food: 7 } })
+    expect(packSiegeFood({ ...start, food: 3 })).toMatchObject({ food: 3, holdings: { food: 0 } })
+  })
+
+  it('starts an older save with no food, counting from yesterday', () => {
+    const { food: _food, foodCollectedThrough: _through, ...oldSave } = start
+    expect(sanitizeHoldings(oldSave, today)).toMatchObject({ food: 0, foodCollectedThrough: '2026-11-09' })
   })
 })

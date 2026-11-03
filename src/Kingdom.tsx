@@ -2,30 +2,42 @@ import { useState } from 'react'
 import './Kingdom.css'
 import ItemSprite from './ItemSprite'
 import type { Hero } from './hero'
-import { KINGDOM_SIZE, KINGDOM_TILE_COUNT, placedBuildings, type PlacedBuilding } from './wares'
+import { FOOD_STORE_LIMIT, KINGDOM_SIZE, KINGDOM_TILE_COUNT, buildingBonuses, foodReady, placedBuildings, type PlacedBuilding } from './wares'
 
 /** The road from the gate to the keep; never built on. */
 const ROAD_TILES = new Set(['3,6', '3,4', '3,2'])
 
 interface KingdomProps {
   hero: Hero
+  today: string
   onVisitMerchant: () => void
+  onCollectFood: () => void
 }
 
-function Kingdom({ hero, onVisitMerchant }: KingdomProps) {
+function Kingdom({ hero, today, onVisitMerchant, onCollectFood }: KingdomProps) {
   const [selected, setSelected] = useState<PlacedBuilding | null>(null)
   const buildings = placedBuildings(hero.holdings)
   const byTile = new Map(buildings.map((building) => [building.tile.join(','), building]))
   const kingdomValue = buildings.reduce((total, building) => total + building.item.price, 0)
+  const food = foodReady(hero.holdings, hero.streak.history, today)
 
   return (
     <div className="kingdom">
       <header className="kingdom-header">
         <h2>{hero.name}'s Kingdom</h2>
         <p className="kingdom-stats">
-          {buildings.length} / {KINGDOM_TILE_COUNT} built · worth {kingdomValue} coins
+          {buildings.length} / {KINGDOM_TILE_COUNT} built · worth {kingdomValue} coins · food {hero.holdings.food} / {FOOD_STORE_LIMIT}
         </p>
       </header>
+
+      {food > 0 && (
+        <div className="food-ready">
+          <span>Your kingdom made {food} food. Your next siege takes up to 5.</span>
+          <button type="button" className="button-primary" data-sfx onClick={onCollectFood}>
+            Collect
+          </button>
+        </div>
+      )}
 
       <div className="kingdom-map" role="grid" aria-label="Kingdom map">
         {Array.from({ length: KINGDOM_SIZE }, (_, row) => (
@@ -76,6 +88,7 @@ function Kingdom({ hero, onVisitMerchant }: KingdomProps) {
           {selected ? (
             <>
               <strong>{selected.item.name}</strong>: {selected.item.description}
+              <span className="kingdom-bonus">Bonus: {buildingBonuses(selected.item).join('. ') || 'none, this one is just for show'}.</span>
             </>
           ) : (
             'Tap a building to inspect it.'

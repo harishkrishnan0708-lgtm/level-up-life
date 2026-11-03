@@ -7,6 +7,7 @@ import Portrait from './Portrait'
 import { WEEK, questsOn, weekdayOf } from './questPlan'
 import { currentStreak, questsNeeded } from './streak'
 import StreakFlame from './StreakFlame'
+import { questBuildingBonus } from './wares'
 
 function formatDay(day: string): string {
   const [year, month, date] = day.split('-').map(Number)
@@ -26,10 +27,11 @@ interface QuestBoardProps {
   onQuestTap: (quest: Quest) => void
   onOpenPets: () => void
   onPlanWeek: () => void
+  onOpenWeek: () => void
   today: string
 }
 
-function QuestBoard({ hero, potionMultiplier, eggRules, onQuestTap, onOpenPets, onPlanWeek, today }: QuestBoardProps) {
+function QuestBoard({ hero, potionMultiplier, eggRules, onQuestTap, onOpenPets, onPlanWeek, onOpenWeek, today }: QuestBoardProps) {
   const { game, pets } = hero
   const progress = levelProgress(game.totalXp)
   const classInfo = heroClassInfo(hero.heroClass)
@@ -131,6 +133,9 @@ function QuestBoard({ hero, potionMultiplier, eggRules, onQuestTap, onOpenPets, 
             {hero.holdings.candles > 0 && <span>Candles {hero.holdings.candles}</span>}
           </div>
         </div>
+        <button type="button" className="button-secondary small week-link" onClick={onOpenWeek}>
+          This week ›
+        </button>
         {!hero.plan.scheduled && (
           <button type="button" className="plan-banner" onClick={onPlanWeek}>
             <strong>Set up your week</strong>
@@ -147,16 +152,22 @@ function QuestBoard({ hero, potionMultiplier, eggRules, onQuestTap, onOpenPets, 
               const done = game.completedQuestIds.includes(quest.id)
               const bonus = hasClassBonus(quest, hero.heroClass)
               const petMultiplier = petXpMultiplier(pets, quest.category)
+              const buildingBonus = questBuildingBonus(hero.holdings, quest.id)
               const xp = Math.round(questXp(quest, hero.heroClass) * potionMultiplier * petMultiplier)
               return (
                 <li key={quest.id}>
-                  <button type="button" className={`quest${done ? ' done' : ''}`} aria-pressed={done} onClick={() => onQuestTap(quest)}>
+                  <button type="button" className={`quest${done ? ' done' : ''}`} aria-pressed={done} data-sfx onClick={() => onQuestTap(quest)}>
                     <span className="quest-text">
                       <span className="quest-trial">{quest.trial}</span>
                       <span className="quest-name">{quest.name}</span>
                       <span className="quest-reward">
-                        {done ? 'Done! Tap to undo' : `+${xp} XP · +${quest.coins} coins`}
+                        {done ? 'Done! Tap to undo' : `+${xp} XP · +${quest.coins + (buildingBonus?.coins ?? 0)} coins`}
                         {bonus && !done && <span className="bonus-tag">{classInfo.name} bonus</span>}
+                        {buildingBonus && !done && (
+                          <span className="bonus-tag">
+                            {buildingBonus.building.name} +{buildingBonus.coins}
+                          </span>
+                        )}
                         {pet && petMultiplier > 1 && !done && (
                           <span className="bonus-tag pet-tag">
                             {pet.name} +{Math.round(pet.bonus * 100)}%

@@ -1,4 +1,4 @@
-import { rivalById, type OpeningMove, type RaidOutcome, type Rival, type WarRecord } from './raids'
+import { rivalById, type OpeningMove, type OrderTier, type RaidOutcome, type Rival, type WarRecord } from './raids'
 
 export type Phase = 'approach' | 'encircle' | 'bombard' | 'assault' | 'keep'
 
@@ -148,9 +148,11 @@ export interface SiegeSetup {
   accuracy: number
   engines: number
   practice?: boolean
+  /** Extra days of food sent from the hero's kingdom. */
+  extraFood?: number
 }
 
-export function startSiege({ rival, might, accuracy, engines, practice = false }: SiegeSetup, random: Random): Siege {
+export function startSiege({ rival, might, accuracy, engines, practice = false, extraFood = 0 }: SiegeSetup, random: Random): Siege {
   const troops = 60 + 10 * might
   const enemy: Defenders = {
     garrison: rival.garrison,
@@ -167,7 +169,7 @@ export function startSiege({ rival, might, accuracy, engines, practice = false }
     coin: null,
     phase: 'approach',
     day: 0,
-    army: { troops, startTroops: troops, morale: 70, supplies: 10, engines },
+    army: { troops, startTroops: troops, morale: 70, supplies: 10 + extraFood, engines },
     enemy,
     // Before anyone has looked, guesses are only half as good as the scouts.
     estimates: scoutEstimates(enemy, accuracy / 2, random),
@@ -195,7 +197,10 @@ export function startSiege({ rival, might, accuracy, engines, practice = false }
       hungryEnemyDays: 0,
     },
     event: null,
-    log: [{ day: 0, text: `Your army of ${troops} gathers on the road to ${rival.name}'s lands.`, tone: 'neutral' }],
+    log: [
+      { day: 0, text: `Your army of ${troops} gathers on the road to ${rival.name}'s lands.`, tone: 'neutral' },
+      ...(extraFood > 0 ? [{ day: 0, text: `Your kingdom sends ${extraFood} extra days of food with the army.`, tone: 'good' as const }] : []),
+    ],
     outcome: null,
     decisions: 0,
   }
@@ -379,6 +384,31 @@ function stormKeepChance(siege: Siege): number {
 
 const percent = (chance: number) => `${Math.round(chance * 100)}%`
 
+/** The order tier at which each order first appears; any order not listed is there from the very first siege. */
+const ORDER_TIERS: Record<string, OrderTier> = {
+  forest: 2,
+  blockade: 2,
+  camp: 2,
+  parley: 2,
+  'fire-towers': 2,
+  rally: 2,
+  regroup: 2,
+  terms: 2,
+  informant: 3,
+  'sally-port': 3,
+  'forage-approach': 3,
+  mine: 3,
+  'fire-granary': 3,
+}
+
+const orderTier = (actionId: string): OrderTier => ORDER_TIERS[actionId] ?? 1
+
+/** Whether an order first appears at this castle, so a player meeting it for the first time can be told it's new. */
+export function isNewOrder(siege: Siege, actionId: string): boolean {
+  const tier = orderTier(actionId)
+  return tier > 1 && tier === rivalOf(siege).orderTier
+}
+
 const RETREAT: SiegeAction = { id: 'retreat', label: 'Sound the retreat', detail: 'End the siege with nothing won or lost', retreat: true }
 
 /** The orders you can give right now. None until the coin has been tossed. */
@@ -483,7 +513,7 @@ export function availableActions(siege: Siege): SiegeAction[] {
   }
 
   actions.push(RETREAT)
-  return actions
+  return actions.filter((action) => orderTier(action.id) <= rival.orderTier)
 }
 
 function arrive(siege: Siege, days: number, random: Random): Siege {

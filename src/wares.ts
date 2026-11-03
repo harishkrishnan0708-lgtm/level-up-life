@@ -1,4 +1,4 @@
-import { levelProgress, toLocalDay, type GameState } from './game'
+import { QUESTS, levelProgress, toLocalDay, type GameState } from './game'
 
 export type ShopCategory = 'kingdom' | 'gear' | 'potion' | 'training'
 
@@ -333,10 +333,14 @@ export interface Holdings {
   boughtToday: Record<string, number>
   /** Candles of Respite waiting to save a streak. */
   candles: number
+  /** Food collected from the kingdom, waiting to go with the next siege. */
+  food: number
+  /** The last day whose food has been collected; only later days can still produce any. */
+  foodCollectedThrough: string
 }
 
 export function newHoldings(today: string): Holdings {
-  return { buildings: {}, gear: [], scoutRank: 0, xpBoostUntil: null, stockDay: today, boughtToday: {}, candles: 0 }
+  return { buildings: {}, gear: [], scoutRank: 0, xpBoostUntil: null, stockDay: today, boughtToday: {}, candles: 0, food: 0, foodCollectedThrough: addDays(today, -1) }
 }
 
 /** A repeatable number in [0, 1) for a piece of text, so stock is the same all day without being saved. */
@@ -486,6 +490,70 @@ function validCounts(value: unknown): Record<string, number> {
   )
 }
 
+/** Extra coins for finishing a quest once you own its building, however many of that building you have. */
+export const BUILDING_QUEST_COINS = 2
+
+/** The quest each building rewards. */
+const BUILDING_QUESTS: Readonly<Record<string, string>> = {
+  forge: 'lift',
+  tent: 'sports',
+  watchtower: 'walk',
+  bonfire: 'sleep',
+  fountain: 'water',
+  hut: 'food',
+  chapel: 'screen',
+}
+
+/** What a building does in war, on top of any quest it rewards. */
+const BUILDING_WAR_PERKS: Readonly<Record<string, string>> = {
+  forge: 'You start every siege with a trebuchet',
+  tent: '10 more soldiers in every siege',
+  watchtower: 'Scout reports are 10% more reliable',
+  keep: '20 more soldiers in every siege',
+}
+
+/** The building that rewards a quest, if the hero owns one, and the coins it adds. */
+export function questBuildingBonus(holdings: Holdings, questId: string): { building: ShopItem; coins: number } | null {
+  const building = SHOP_ITEMS.find((item) => BUILDING_QUESTS[item.id] === questId)
+  return building && ownedCount(holdings, building) > 0 ? { building, coins: BUILDING_QUEST_COINS } : null
+}
+
+/** Everything a building does for its owner, in plain words; empty for one that's only for show. */
+export function buildingBonuses(item: ShopItem): string[] {
+  const quest = QUESTS.find(({ id }) => id === BUILDING_QUESTS[item.id])
+  const perk = BUILDING_WAR_PERKS[item.id]
+  return [
+    ...(quest ? [`+${BUILDING_QUEST_COINS} coins each time you finish “${quest.name}”`, 'Makes 1 food each day you keep your streak'] : []),
+    ...(perk ? [perk] : []),
+  ]
+}
+
+/** The most food the kingdom can store. */
+export const FOOD_STORE_LIMIT = 20
+/** The most food one siege can take from the store. */
+const SIEGE_FOOD_LIMIT = 5
+
+/**
+ * Food made since the last collection and waiting to be collected: 1 per kind of quest building per kept day. Only
+ * finished days count, so undoing a quest can't take back food already made. It stops at what the store can hold.
+ */
+export function foodReady(holdings: Holdings, history: Readonly<Record<string, string>>, today: string): number {
+  const producers = SHOP_ITEMS.filter((item) => BUILDING_QUESTS[item.id] && ownedCount(holdings, item) > 0).length
+  const keptDays = Object.entries(history).filter(([day, result]) => result === 'kept' && day > holdings.foodCollectedThrough && day < today).length
+  return Math.min(producers * keptDays, FOOD_STORE_LIMIT - holdings.food)
+}
+
+/** Moves the food that's ready into the store. Anything past the limit is lost, and those days can't produce again. */
+export function collectFood(holdings: Holdings, history: Readonly<Record<string, string>>, today: string): Holdings {
+  return { ...holdings, food: holdings.food + foodReady(holdings, history, today), foodCollectedThrough: addDays(today, -1) }
+}
+
+/** Takes food from the store for a siege. */
+export function packSiegeFood(holdings: Holdings): { holdings: Holdings; food: number } {
+  const food = Math.min(SIEGE_FOOD_LIMIT, holdings.food)
+  return { holdings: { ...holdings, food: holdings.food - food }, food }
+}
+
 /** Rebuilds holdings from saved data, keeping only buildings that exist and fit on the map. */
 export function sanitizeHoldings(value: unknown, today: string): Holdings {
   if (typeof value !== 'object' || value === null) {
@@ -511,5 +579,7 @@ export function sanitizeHoldings(value: unknown, today: string): Holdings {
     stockDay: isDay(saved.stockDay) ? saved.stockDay : today,
     boughtToday: validCounts(saved.boughtToday),
     candles: Number.isInteger(saved.candles) ? Math.min(MAX_CANDLES, Math.max(0, saved.candles as number)) : 0,
+    food: Number.isInteger(saved.food) ? Math.min(FOOD_STORE_LIMIT, Math.max(0, saved.food as number)) : 0,
+    foodCollectedThrough: isDay(saved.foodCollectedThrough) ? saved.foodCollectedThrough : addDays(today, -1),
   }
 }

@@ -42,12 +42,12 @@ export function coachAdvice(siege: Siege): CoachAdvice {
     case 'approach':
       if (!flags.scouted) {
         return advise(
-          'Never march blind. Those enemy numbers on the right are only guesses until your scouts have looked. Send them ahead.',
+          'Never march blind. Those enemy numbers are only guesses until your scouts have looked. Send them ahead. And if an order puzzles you, tap “What do these mean?” above your orders.',
           'scout',
         )
       }
       return advise(
-        'Now choose your road. The forest catches them unprepared but eats your food; the king’s road is quick but they see you coming. Food wins sieges, so take the river: the barges carry your supplies.',
+        'Now choose your road. The king’s road is quick, but they see you coming. Food wins sieges, so take the river: the barges carry your supplies.',
         'river',
       )
     case 'encircle':
@@ -60,7 +60,7 @@ export function coachAdvice(siege: Siege): CoachAdvice {
         return advise('The gate is cracking. That’s your way in. Launch the assault!', 'begin-assault')
       }
       if (siege.reinforced === 'gate') {
-        return advise('They shored up the gate overnight, so hitting it again does less. Switch targets: knock out the towers instead.', 'fire-towers')
+        return advise('They shored up the gate overnight, so hitting it again does less. Switch targets: batter the walls instead.', 'fire-walls')
       }
       return advise('Pound the gate. Watch the enemy report on the right: when the gate drops low, it’s time to attack.', 'fire-gate')
     case 'assault':
@@ -70,7 +70,7 @@ export function coachAdvice(siege: Siege): CoachAdvice {
       return advise('Ram the gate you weakened. Each wave gains ground; fill the foothold bar to take the walls.', 'ram')
     case 'keep':
       return advise(
-        'The walls are yours; only the keep is left. Storming it pays the most but can fail. Offering terms is safer. Your choice, commander.',
+        'The walls are yours; only the keep is left. Storming it pays the most but can fail. Plundering is certain but pays less. Your choice, commander.',
       )
   }
 }

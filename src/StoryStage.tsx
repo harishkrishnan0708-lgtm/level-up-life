@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Hero } from './hero'
 import MarketScene from './MarketScene'
 import { paintWickPortrait } from './marketPixels'
 import PixelArt from './PixelArt'
 import { cachedImage } from './pixelImage'
-import { FIGURE_HEIGHT, FIGURE_WIDTH, handPosition, paintFigure, type Pose } from './heroPixels'
+import { FIGURE_HEIGHT, FIGURE_WIDTH, handPosition, paintFigure, type Expression, type Pose } from './heroPixels'
 import { MANNERISMS, SPEAKER_NAMES, characterLook, type CastState } from './cast'
 import type { Actor, SceneId, Speaker, Staging } from './story'
 import {
@@ -22,6 +22,7 @@ import {
   paintFortYard,
   paintKeepHall,
   paintSteppeCamp,
+  type Point,
 } from './storyScenes'
 
 const WICK_PORTRAIT = paintWickPortrait()
@@ -161,14 +162,151 @@ function Campfire() {
   )
 }
 
+/**
+ * Quiet background life, small and slow so the eye finds it only after a while: birds, glows, drips, fireflies.
+ * Each scene gets one vivid colour against its dull ones.
+ */
+
+/** Birds gliding across the sky, flapping now and then: [x, y, seconds to cross]. */
+function Birds({ flock, color }: { flock: readonly (readonly [number, number, number])[]; color: string }) {
+  return (
+    <>
+      {flock.map(([x, y, seconds], index) => (
+        <g key={index} className="bird-glide" style={{ animationDuration: `${seconds}s`, animationDelay: `${-index * seconds * 0.4}s` }}>
+          <g className="bird-flap" style={{ animationDelay: `${-index * 0.3}s` }}>
+            <rect x={x - 2} y={y - 1} width={1} height={1} fill={color} />
+            <rect x={x - 1} y={y} width={3} height={1} fill={color} />
+            <rect x={x + 2} y={y - 1} width={1} height={1} fill={color} />
+          </g>
+        </g>
+      ))}
+    </>
+  )
+}
+
+/** Soft lights that slowly brighten and fade: fire under smoke, a lit window, the sun. */
+function Glows({ spots, color, size = 3 }: { spots: readonly Point[]; color: string; size?: number }) {
+  return (
+    <>
+      {spots.map(([x, y], index) => (
+        <g key={`${x}-${y}`} className="glow-pulse" style={{ animationDelay: `${-index * 1.3}s` }}>
+          <rect x={x - size * 2} y={y - size} width={size * 4} height={size * 2} fill={color} opacity={0.18} />
+          <rect x={x - size} y={y - size / 2} width={size * 2} height={size} fill={color} opacity={0.5} />
+        </g>
+      ))}
+    </>
+  )
+}
+
+/** Little lights wandering in the dark: fireflies, will-o'-wisps. */
+function Wanderers({ spots, color, className }: { spots: readonly Point[]; color: string; className: string }) {
+  return (
+    <>
+      {spots.map(([x, y], index) => (
+        <g key={`${x}-${y}`} className={className} style={{ animationDelay: `${-index * 1.7}s` }}>
+          <rect x={x - 1} y={y - 1} width={3} height={3} fill={color} opacity={0.25} />
+          <rect x={x} y={y} width={1} height={1} fill={color} />
+        </g>
+      ))}
+    </>
+  )
+}
+
+/** Stars that twinkle at their own pace. */
+function Twinkles({ stars }: { stars: readonly Point[] }) {
+  return (
+    <>
+      {stars.map(([x, y], index) => (
+        <rect key={`${x}-${y}`} className="star-twinkle" x={x} y={y} width={1} height={1} fill="#fff4c8" style={{ animationDelay: `${-index * 0.9}s`, animationDuration: `${3 + (index % 3)}s` }} />
+      ))}
+    </>
+  )
+}
+
+/** A drop of water gathering under the arch, falling, and splashing on the flagstones. */
+function Drips({ spots }: { spots: readonly Point[] }) {
+  return (
+    <>
+      {spots.map(([x, y], index) => (
+        <g key={x} style={{ animationDelay: `${-index * 2.3}s` }} className="drip">
+          <rect x={x} y={y} width={1} height={2} fill="#7ad0f0" />
+        </g>
+      ))}
+    </>
+  )
+}
+
+function FortYardLife() {
+  return (
+    <>
+      <Birds flock={[[-10, 22, 34], [-24, 30, 40], [-16, 16, 46]]} color="#1a1220" />
+      <Glows spots={FORT_SMOKE.map(([x, y]) => [x, y + 6] as Point)} color="#ff6a2a" size={2} />
+      <Smoke />
+    </>
+  )
+}
+
+function CellarLife() {
+  return (
+    <>
+      <Torches />
+      <Drips spots={[[46, 60], [154, 64]]} />
+    </>
+  )
+}
+
+function KeepLife() {
+  return (
+    <>
+      <Snow />
+      <rect x={44} y={113} width={2} height={5} fill="#e8dcc0" />
+      <g className="flicker">
+        <rect x={39} y={106} width={12} height={8} fill="#ffc85a" opacity={0.15} />
+        <rect x={44} y={110} width={2} height={3} fill="#ffc85a" />
+        <rect x={44} y={109} width={1} height={1} fill="#fff1c4" />
+      </g>
+    </>
+  )
+}
+
+function FenLife() {
+  return (
+    <>
+      <Glows spots={[[125, 75]]} color="#ffb456" size={4} />
+      <Wanderers spots={[[36, 104], [84, 118], [176, 110]]} color="#5ae8d4" className="wisp-drift" />
+      <Embers />
+    </>
+  )
+}
+
+function SteppeLife() {
+  return (
+    <>
+      <Glows spots={[[150, 78]]} color="#ffe08a" size={8} />
+      <Birds flock={[[-10, 40, 38], [-20, 32, 44]]} color="#3a1420" />
+      <Wind />
+    </>
+  )
+}
+
+function CampNightLife() {
+  return (
+    <>
+      <Twinkles stars={[[12, 8], [53, 20], [96, 6], [131, 30], [184, 12], [74, 44]]} />
+      <Wanderers spots={[[30, 104], [64, 122], [150, 110], [184, 128], [96, 98]]} color="#d4f05a" className="firefly" />
+      <Campfire />
+    </>
+  )
+}
+
 /** Each painted setting, and the movement drawn over it. */
 const SETTINGS = {
-  'fort-yard': { paint: paintFortYard, Life: Smoke },
-  'fort-cellar': { paint: paintFortCellar, Life: Torches },
-  'keep-hall': { paint: paintKeepHall, Life: Snow },
-  'cinder-fen': { paint: paintCinderFen, Life: Embers },
-  'steppe-camp': { paint: paintSteppeCamp, Life: Wind },
-  'camp-night': { paint: paintCampNight, Life: Campfire },
+  'fort-yard': { paint: paintFortYard, Life: FortYardLife },
+  'fort-cellar': { paint: paintFortCellar, Life: CellarLife },
+  'keep-hall': { paint: paintKeepHall, Life: KeepLife },
+  'cinder-fen': { paint: paintCinderFen, Life: FenLife },
+  'steppe-camp': { paint: paintSteppeCamp, Life: SteppeLife },
+  'camp-night': { paint: paintCampNight, Life: CampNightLife },
 } as const
 
 function PaintedSetting({ scene }: { scene: Exclude<SceneId, 'market'> }) {
@@ -181,18 +319,75 @@ function PaintedSetting({ scene }: { scene: Exclude<SceneId, 'market'> }) {
   )
 }
 
-function ActorFigure({ actor, pose, hero, cast }: { actor: Actor; pose: Pose; hero: Hero; cast: CastState }) {
+const prefersStillness = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** True for a moment every few seconds, at an uneven pace, so a crowd never blinks in step. */
+function useBlinking(): boolean {
+  const [blinking, setBlinking] = useState(false)
+  useEffect(() => {
+    if (prefersStillness()) {
+      return
+    }
+    let timer: number
+    const waitForBlink = () => {
+      timer = window.setTimeout(
+        () => {
+          setBlinking(true)
+          timer = window.setTimeout(() => {
+            setBlinking(false)
+            waitForBlink()
+          }, 140)
+        },
+        2200 + Math.random() * 3000,
+      )
+    }
+    waitForBlink()
+    return () => window.clearTimeout(timer)
+  }, [])
+  return blinking
+}
+
+/** While `talking`, flips between an open and a closed mouth, like a character mouthing their words. */
+function useMouthOpen(talking: boolean): boolean {
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!talking || prefersStillness()) {
+      return
+    }
+    const timer = window.setInterval(() => setOpen((wasOpen) => !wasOpen), 120)
+    return () => {
+      window.clearInterval(timer)
+      setOpen(false)
+    }
+  }, [talking])
+  return talking && open
+}
+
+interface ActorFigureProps {
+  actor: Actor
+  pose: Pose
+  mood: Expression
+  /** Whether this actor's line is still being typed out. */
+  talking: boolean
+  hero: Hero
+  cast: CastState
+}
+
+function ActorFigure({ actor, pose, mood, talking, hero, cast }: ActorFigureProps) {
   const state = actor === 'hero' ? null : cast[actor]
+  const blinking = useBlinking()
+  const mouthOpen = useMouthOpen(talking)
   const figure = useMemo(() => {
+    const face = { expression: mood, blinking, talking: mouthOpen }
     if (actor === 'hero') {
-      return paintFigure(hero.appearance, pose)
+      return paintFigure(hero.appearance, pose, {}, face)
     }
     if (actor !== 'wick' && state) {
       const { appearance, features } = characterLook(actor, state)
-      return paintFigure(appearance, pose, features)
+      return paintFigure(appearance, pose, features, face)
     }
     return null
-  }, [actor, hero.appearance, pose, state])
+  }, [actor, hero.appearance, pose, state, mood, blinking, mouthOpen])
   if (!figure) {
     return <PixelArt grid={WICK_PORTRAIT} className="actor-art" label="Wick" />
   }
@@ -205,10 +400,12 @@ interface StoryStageProps {
   hero: Hero
   /** Where each character stands with the hero, which can change how they look. */
   cast: CastState
+  /** Whether the current line is still being typed out, so the speaker's mouth moves. */
+  typing: boolean
 }
 
 /** The scene a story line plays out in: a setting with a little life in it, and the cast standing in front. */
-function StoryStage({ staging, speaker, hero, cast }: StoryStageProps) {
+function StoryStage({ staging, speaker, hero, cast, typing }: StoryStageProps) {
   const { scene, cast: onStage } = staging
   const marks = STAGE_MARKS[onStage.length] ?? []
   return (
@@ -229,7 +426,14 @@ function StoryStage({ staging, speaker, hero, cast }: StoryStageProps) {
           style={{ left: `${marks[index]}%`, width: onStage.length > 3 ? '24%' : undefined }}
         >
           <div className="actor-sway" style={{ animationDelay: `${-index * 0.9}s` }}>
-            <ActorFigure actor={actor} pose={staging.poses[actor]} hero={hero} cast={cast} />
+            <ActorFigure
+              actor={actor}
+              pose={staging.poses[actor]}
+              mood={staging.moods[actor]}
+              talking={typing && speaker === actor}
+              hero={hero}
+              cast={cast}
+            />
             {speaker !== actor && <Mannerism actor={actor} pose={staging.poses[actor]} />}
           </div>
         </div>

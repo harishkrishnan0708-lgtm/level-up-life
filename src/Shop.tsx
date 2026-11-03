@@ -12,6 +12,7 @@ import {
   SHOP_ITEMS,
   checkPurchase,
   maxOwned,
+  buildingBonuses,
   ownedCount,
   seededRandom,
   stockLeft,
@@ -122,7 +123,9 @@ function describe(item: ShopItem, hero: Hero, today: string): string {
   const left = stockLeft(hero.holdings, item, today)
   const owned = item.tiles ? ` You own ${ownedCount(hero.holdings, item)} of ${maxOwned(item)}.` : item.equipSlot ? ' Suits you, I’d say.' : ''
   const scarcity = item.rarity === 'legendary' ? ' I won’t have another for a while.' : ` ${left} left today.`
-  return `The ${item.name}. ${item.description}${scarcity}${owned} Yours for ${item.price} coins.`
+  const bonuses = buildingBonuses(item)
+  const bonus = bonuses.length > 0 ? ` Bonus: ${bonuses.join('. ')}.` : ''
+  return `The ${item.name}. ${item.description}${bonus}${scarcity}${owned} Yours for ${item.price} coins.`
 }
 
 /** The hero's appearance with one piece of gear swapped in, for trying it on. */
@@ -297,7 +300,7 @@ function Shop({ hero, today, onBuy }: ShopProps) {
           {selected ? (
             <>
               {selectedCheck === 'ok' && (
-                <button type="button" className="choice choice-buy" onClick={() => handleBuy(selected)}>
+                <button type="button" className="choice choice-buy" data-sfx onClick={() => handleBuy(selected)}>
                   Buy it ({selected.price} coins)
                 </button>
               )}

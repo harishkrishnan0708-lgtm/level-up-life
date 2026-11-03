@@ -122,6 +122,15 @@
   font-weight: 600;
 }
 
+/* Sits beside the Heroes button, so the app name keeps the left side to itself. */
+.sound-button {
+  min-width: 40px;
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 0;
+  font-size: 16px;
+}
+
 .hero-bottom {
   display: flex;
   align-items: center;

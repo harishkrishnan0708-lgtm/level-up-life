@@ -1,0 +1,83 @@
+/* The weekly summary: reuses the planner's week grid, with marks instead of toggles */
+
+.week-day-label {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.week-day-label.today {
+  color: var(--ember);
+}
+
+.summary-flame {
+  display: block;
+  width: 9px;
+  height: 12px;
+}
+
+.summary-day-mark {
+  height: 12px;
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.summary-cell {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.summary-cell.done {
+  border-color: #a87a1e;
+  background: var(--ember);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.summary-cell.off {
+  border-color: transparent;
+  background: transparent;
+}
+
+.summary-cell.upcoming {
+  border-style: dashed;
+}
+
+.summary-empty,
+.summary-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.summary-totals {
+  display: grid;
+  gap: 8px;
+}
+
+.summary-totals p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.summary-totals span {
+  color: var(--muted);
+}
+
+.summary-totals strong {
+  text-align: right;
+}
+
+/* The way into the summary, beside the streak on the quest board */
+.week-link {
+  display: block;
+  margin: 8px auto 0;
+}

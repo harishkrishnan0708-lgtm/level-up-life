@@ -80,6 +80,7 @@ function StoryReader({ chapter, hero, onChoose, onFinish, onClose }: StoryReader
               speaker={choosing ? null : line.speaker}
               hero={hero}
               cast={cast}
+              typing={!choosing && !typed}
             />
           </div>
           <section className={`story-box${line.speaker === 'narrator' && !choosing ? ' story-narration' : ''}`} aria-live="polite">

@@ -82,3 +82,20 @@
   text-align: center;
   color: var(--muted);
 }
+
+.kingdom-bonus {
+  display: block;
+  margin-top: 6px;
+  color: var(--ember);
+}
+
+.food-ready {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 2px solid var(--ember);
+  background: var(--surface);
+}

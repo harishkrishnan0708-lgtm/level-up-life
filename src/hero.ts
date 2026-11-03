@@ -1,3 +1,4 @@
+import { sanitizeAchievements } from './achievements'
 import { HERO_CLASSES, isGameState, newGame, startDay, type GameState, type HeroClass } from './game'
 import { newPetState, sanitizePets, type PetState } from './pets'
 import { newWarRecord, type WarRecord } from './raids'
@@ -222,10 +223,12 @@ export interface Hero {
   plan: QuestPlan
   /** How each recent day went, for the streak. */
   streak: StreakState
+  /** Achievements earned, by id, with the day each was earned. */
+  achievements: Record<string, string>
 }
 
 /** Everything the player chooses on the character screen. */
-export type HeroDraft = Omit<Hero, 'id' | 'game' | 'holdings' | 'pets' | 'war' | 'story' | 'plan' | 'streak'>
+export type HeroDraft = Omit<Hero, 'id' | 'game' | 'holdings' | 'pets' | 'war' | 'story' | 'plan' | 'streak' | 'achievements'>
 
 export function newHeroDraft(): HeroDraft {
   return { name: '', title: '', backstory: '', heroClass: 'warrior', appearance: { ...DEFAULT_APPEARANCE } }
@@ -283,7 +286,7 @@ function cleanDraft(draft: HeroDraft): HeroDraft {
 
 /** Adds a new hero and makes it the active one. */
 export function addHero(roster: Roster, draft: HeroDraft, game: GameState): Roster {
-  const hero: Hero = { ...cleanDraft(draft), id: makeHeroId(), game, holdings: newHoldings(game.day), pets: newPetState(), war: newWarRecord(), story: newStoryState(), plan: newQuestPlan(), streak: newStreakState() }
+  const hero: Hero = { ...cleanDraft(draft), id: makeHeroId(), game, holdings: newHoldings(game.day), pets: newPetState(), war: newWarRecord(), story: newStoryState(), plan: newQuestPlan(), streak: newStreakState(), achievements: {} }
   return { activeHeroId: hero.id, heroes: [...roster.heroes, hero] }
 }
 
@@ -294,7 +297,7 @@ export function editHero(roster: Roster, heroId: string, draft: HeroDraft): Rost
   }
 }
 
-export function setHeroProgress(roster: Roster, heroId: string, progress: Partial<Pick<Hero, 'game' | 'holdings' | 'pets' | 'war' | 'story' | 'plan' | 'streak'>>): Roster {
+export function setHeroProgress(roster: Roster, heroId: string, progress: Partial<Pick<Hero, 'game' | 'holdings' | 'pets' | 'war' | 'story' | 'plan' | 'streak' | 'achievements'>>): Roster {
   return { ...roster, heroes: roster.heroes.map((hero) => (hero.id === heroId ? { ...hero, ...progress } : hero)) }
 }
 
@@ -375,6 +378,7 @@ function sanitizeHero(value: unknown, today: string): Hero | null {
     story: sanitizeStoryState(saved.story),
     plan: sanitizeQuestPlan(saved.plan),
     streak: sanitizeStreak(saved.streak),
+    achievements: sanitizeAchievements(saved.achievements),
   }
 }
 

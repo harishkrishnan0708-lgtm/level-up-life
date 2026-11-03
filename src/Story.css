@@ -360,8 +360,133 @@
   }
 }
 
+/* Quiet background life: slow enough that the eye finds it only after a while */
+
+.bird-glide {
+  animation: bird-glide 36s steps(120) infinite;
+}
+
+@keyframes bird-glide {
+  from {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(115px, -6px);
+  }
+  to {
+    transform: translate(230px, 2px);
+  }
+}
+
+.bird-flap {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bird-flap 1.6s steps(1) infinite;
+}
+
+@keyframes bird-flap {
+  70% {
+    transform: scaleY(-1);
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 4.5s steps(9) infinite;
+}
+
+@keyframes glow-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.firefly {
+  animation: firefly 7s steps(28) infinite;
+}
+
+@keyframes firefly {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(5px, -4px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translate(9px, 1px);
+  }
+  80% {
+    opacity: 0;
+    transform: translate(4px, 3px);
+  }
+}
+
+.wisp-drift {
+  animation: wisp-drift 11s steps(44) infinite;
+}
+
+@keyframes wisp-drift {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(14px, -3px);
+  }
+  75% {
+    opacity: 0.9;
+    transform: translate(22px, 1px);
+  }
+}
+
+.star-twinkle {
+  animation: star-twinkle 4s steps(4) infinite;
+}
+
+@keyframes star-twinkle {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.drip {
+  animation: drip 4.6s steps(23) infinite;
+}
+
+@keyframes drip {
+  0%,
+  55% {
+    opacity: 0.9;
+    transform: translate(0, 0);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 52px);
+  }
+  86%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 52px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scene-backdrop,
+  .bird-glide,
+  .bird-flap,
+  .glow-pulse,
+  .firefly,
+  .wisp-drift,
+  .star-twinkle,
+  .drip,
   .actor-sway,
   .smoke-puff,
   .dust-mote,

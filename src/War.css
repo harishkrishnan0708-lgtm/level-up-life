@@ -525,6 +525,13 @@
   background: #141d2c;
 }
 
+.war-unlock {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
 .coach-name {
   margin: 0 0 4px;
   color: #9db8e6;
@@ -570,6 +577,87 @@
   border-radius: 0;
   background: #24385a;
   color: #b9cff2;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.coach-phase {
+  margin: 0 0 6px;
+  color: #9db8e6;
+  font-size: 14px;
+}
+
+.siege-guide {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.siege-guide summary {
+  min-height: 28px;
+  color: var(--ember);
+  cursor: pointer;
+}
+
+.siege-guide-phase {
+  margin: 8px 0 0;
+}
+
+.siege-guide-phase + dl {
+  margin-top: 12px;
+}
+
+.siege-guide-numbers {
+  margin-top: 14px;
+}
+
+.siege-guide dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.siege-guide dt {
+  color: var(--ember);
+}
+
+.siege-guide dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+
+.order-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.order-tab {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.order-tab.open {
+  border-color: var(--ember);
+  background: var(--surface-raised);
+  color: var(--ember);
+}
+
+.new-order-tag {
+  margin-left: 8px;
+  padding: 1px 7px;
+  background: var(--ember);
+  color: var(--bg);
   font-size: 11px;
   font-weight: 700;
   vertical-align: middle;

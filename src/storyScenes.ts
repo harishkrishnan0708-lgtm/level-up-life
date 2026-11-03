@@ -5,7 +5,7 @@ import { PixelGrid, shade } from './pixel'
 export const SCENE_WIDTH = 200
 export const SCENE_HEIGHT = 150
 
-type Point = readonly [number, number]
+export type Point = readonly [number, number]
 
 /** Rough stone blocks in staggered rows, each a slightly different shade. */
 function masonry(grid: PixelGrid, x0: number, y0: number, x1: number, y1: number, base: string, blockWidth = 8, blockHeight = 5): void {

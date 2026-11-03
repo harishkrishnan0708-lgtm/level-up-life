@@ -144,6 +144,10 @@ function paintBody(grid: PixelGrid, appearance: Appearance, cloth: Ramp, facing:
   }
 }
 
+function browColor(appearance: Appearance, skin: Ramp, hair: Ramp): string {
+  return appearance.hairStyle === 'bald' || appearance.hairStyle === 'mohawk' ? skin.dark : hair.dark
+}
+
 function paintFace(grid: PixelGrid, appearance: Appearance, skin: Ramp, hair: Ramp, iris: Ramp): void {
   grid.rect(14, 19, 17, 22, (x) => (x > 15 ? skin.dark : skin.base))
   const shading = litFromLeft(skin, MID, 6.4)
@@ -158,7 +162,7 @@ function paintFace(grid: PixelGrid, appearance: Appearance, skin: Ramp, hair: Ra
     ] as Point[],
     shading,
   )
-  const brow = appearance.hairStyle === 'bald' || appearance.hairStyle === 'mohawk' ? skin.dark : hair.dark
+  const brow = browColor(appearance, skin, hair)
   paintEye(grid, 10, false, iris, brow)
   paintEye(grid, 18, true, iris, brow)
   grid.set(16, 17, skin.dark)
@@ -823,6 +827,7 @@ export interface CharacterFeatures {
 
 const SCAR = '#9a5048'
 const MILKY_EYE = '#d4d8dc'
+const WEATHERED_PUPIL = '#4a3a30'
 const CLAY = { light: '#efe2c8', base: '#cdbd98', dark: '#8f7f62' }
 const BANDAGE = ['#e8e0d0', '#c8c0b0']
 
@@ -835,7 +840,7 @@ function paintFeatures(grid: PixelGrid, features: CharacterFeatures, skin: Ramp,
       grid.rect(left - 1, 12, left + 4, 12, hair.base)
       grid.rect(left, 14, left + 3, 14, skin.dark)
       grid.rect(left, 15, left + 3, 15, LASH)
-      grid.set(left + (left < MID ? 2 : 1), 15, '#4a3a30')
+      grid.set(left + (left < MID ? 2 : 1), 15, WEATHERED_PUPIL)
       grid.set(left < MID ? left - 1 : left + 4, 16, skin.dark)
     }
     for (const x of [11, 12, 19, 20]) {
@@ -935,8 +940,83 @@ function paintFeatures(grid: PixelGrid, features: CharacterFeatures, skin: Ramp,
   }
 }
 
+/** How a story character's face looks on a line. */
+export type Expression = 'neutral' | 'happy' | 'stern' | 'sad' | 'surprised'
+
+export const EXPRESSIONS: readonly Expression[] = ['neutral', 'happy', 'stern', 'sad', 'surprised']
+
+/** A face at one moment: its expression, and whether the eyes are mid-blink or the mouth mid-word. */
+export interface Face {
+  expression: Expression
+  blinking?: boolean
+  talking?: boolean
+}
+
+const MOUTH = '#4a2028'
+
+/** The brows' colour and the row they sit on, which is lower on an older, heavier-browed face. */
+interface Brow {
+  color: string
+  row: number
+}
+
+/** The mouth for each expression, drawn over the plain lips; a neutral face keeps its lips. */
+const MOUTHS: Record<Expression, readonly Point[]> = {
+  neutral: [],
+  happy: [[14, 18], [15, 19], [16, 19], [17, 18]],
+  stern: [[14, 19], [15, 19], [16, 19], [17, 19]],
+  sad: [[14, 20], [15, 19], [16, 19], [17, 20]],
+  surprised: [[15, 19], [16, 19], [15, 20], [16, 20]],
+}
+
+/**
+ * Changes the eyes, brows, and mouth to show a feeling. It only paints over bare skin and the eyes and lips themselves,
+ * so hair, beards, moustaches, and hats drawn on top stay as they are; a moustached face shows its mood in its eyes.
+ */
+function paintExpression(grid: PixelGrid, { expression, blinking, talking }: Face, skin: Ramp, iris: Ramp, brow: Brow): void {
+  const bareSkin = tones(skin)
+  const eyeColors = [LASH, WHITE, MILKY_EYE, WEATHERED_PUPIL, ...tones(iris)]
+  const closed = blinking ? 'shut' : expression === 'happy' ? 'smiling' : null
+  for (const left of [10, 18]) {
+    // `inward` points toward the nose, so one set of offsets draws both eyes as mirror images.
+    const inward = left < MID ? 1 : -1
+    const inner = left < MID ? left + 3 : left
+    const outer = left < MID ? left : left + 3
+    const browOuter = inner - 2 * inward
+    if (closed) {
+      grid.rect(left - 1, 12, left + 4, 16, (x, y) => (eyeColors.includes(grid.get(x, y) ?? '') ? skin.base : null))
+      const lid: Point[] = closed === 'shut' ? [[left, 15], [left + 1, 15], [left + 2, 15], [left + 3, 15]] : [[outer, 15], [left + 1, 14], [left + 2, 14], [inner, 15]]
+      for (const [x, y] of lid) {
+        grid.recolor(x, y, LASH, bareSkin)
+      }
+    }
+    const { row } = brow
+    const brows: Partial<Record<Expression, Point[]>> = {
+      stern: [[inner, row + 1], [inner - inward, row + 1], [inner, row + 2]],
+      sad: [[inner, row - 1], [browOuter, row + 1], [browOuter - inward, row + 1]],
+      surprised: [[inner, row - 1], [inner - inward, row - 1], [browOuter, row - 1]],
+    }
+    for (const [x, y] of brows[expression] ?? []) {
+      grid.recolor(x, y, brow.color, bareSkin)
+    }
+    if (expression === 'stern' && !closed) {
+      // Narrowed eyes: the lid drops over the top of the iris.
+      grid.rect(left, 14, left + 3, 14, (x, y) => (eyeColors.includes(grid.get(x, y) ?? '') ? LASH : null))
+    }
+  }
+  const mouth = talking ? [...MOUTHS[expression], [15, 20], [16, 20]] : MOUTHS[expression]
+  if (MOUTHS[expression].length > 0) {
+    grid.rect(15, 19, 16, 19, (x, y) => (grid.get(x, y) === LIPS ? skin.base : null))
+  }
+  for (const [x, y] of mouth) {
+    grid.recolor(x, y, MOUTH, [...bareSkin, LIPS, BLUSH])
+  }
+}
+
+const RESTING_FACE: Face = { expression: 'neutral' }
+
 /** A full-body figure for story scenes: the same head as the portrait, a chibi body in the hero's outfit, posed. */
-export function paintFigure(appearance: Appearance, pose: Pose, features: CharacterFeatures = {}): PixelGrid {
+export function paintFigure(appearance: Appearance, pose: Pose, features: CharacterFeatures = {}, face: Face = RESTING_FACE): PixelGrid {
   const grid = new PixelGrid(FIGURE_WIDTH, FIGURE_HEIGHT)
   const { skin, hair, cloth, iris } = heroPalette(appearance)
   const clothes = figureClothes(appearance, cloth)
@@ -1001,6 +1081,8 @@ export function paintFigure(appearance: Appearance, pose: Pose, features: Charac
   paintHat(grid, appearance, iris, 'front')
   beardOverHelm(grid, appearance, hair, 'front')
   paintFeatures(grid, features, skin, hair, clothes.sleeve, leftArm[2])
+  const brow = features.weathered ? { color: hair.base, row: 12 } : { color: browColor(appearance, skin, hair), row: 11 }
+  paintExpression(grid, face, skin, iris, brow)
   grid.outline()
   return grid
 }

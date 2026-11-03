@@ -1,8 +1,10 @@
-import { levelProgress, type GameState } from './game'
+import { levelProgress, xpNeededForLevel, type GameState } from './game'
 import { isPerfectDay, newQuestPlan, type QuestPlan } from './questPlan'
 import { petById, type PetRarity, type PetState } from './pets'
 import type { Siege } from './siege'
 import type { Holdings } from './wares'
+
+export type OrderTier = 1 | 2 | 3
 
 /** What a defender does with the first move when they win the coin toss. */
 export type OpeningMove = 'spotted' | 'shore-gate' | 'raid-supplies' | 'ill-omens'
@@ -30,6 +32,11 @@ export interface Rival {
   /** Chance that ladders, mines, or traitors run into a trap. */
   trapChance: number
   informantCost: number
+  /**
+   * Which orders a siege against them offers: 1 is the basics, 2 adds tactics like blockades and terms, 3 adds tricks
+   * like informants and mines. Later castles offer more, so new commanders aren't swamped.
+   */
+  orderTier: OrderTier
   /** The first moves this rival likes to make when they win the toss. */
   openingMoves: readonly OpeningMove[]
 }
@@ -51,6 +58,7 @@ export const RIVALS: readonly Rival[] = [
     sallyChance: 0.1,
     trapChance: 0.1,
     informantCost: 10,
+    orderTier: 2,
     openingMoves: ['shore-gate', 'spotted'],
   },
   {
@@ -69,6 +77,7 @@ export const RIVALS: readonly Rival[] = [
     sallyChance: 0.15,
     trapChance: 0.35,
     informantCost: 15,
+    orderTier: 3,
     openingMoves: ['ill-omens', 'spotted'],
   },
   {
@@ -87,6 +96,7 @@ export const RIVALS: readonly Rival[] = [
     sallyChance: 0.4,
     trapChance: 0.1,
     informantCost: 20,
+    orderTier: 3,
     openingMoves: ['raid-supplies', 'spotted'],
   },
 ]
@@ -108,6 +118,7 @@ export const PRACTICE_RIVAL: Rival = {
   sallyChance: 0.05,
   trapChance: 0,
   informantCost: 0,
+  orderTier: 1,
   openingMoves: ['spotted'],
 }
 
@@ -177,6 +188,25 @@ export interface WarRecord {
 
 export function newWarRecord(): WarRecord {
   return { lastRaidDay: null, victories: 0, defeats: 0, stalemates: 0, activeSiege: null, trainingDone: false, beaten: [] }
+}
+
+/** The level the War opens at, so new players get used to their quests before they lead an army. */
+export const WAR_UNLOCK_LEVEL = 3
+
+/** Total XP a hero needs for the War to open. */
+const WAR_UNLOCK_XP = Array.from({ length: WAR_UNLOCK_LEVEL - 1 }, (_, index) => xpNeededForLevel(index + 1)).reduce((total, xp) => total + xp, 0)
+
+/**
+ * Whether the War tab is open to the hero. Heroes who had already started training or fought before the War was locked
+ * keep it, so nobody loses access they had.
+ */
+export function warUnlocked(game: GameState, war: WarRecord): boolean {
+  return levelProgress(game.totalXp).level >= WAR_UNLOCK_LEVEL || war.trainingDone || war.activeSiege !== null || war.beaten.length > 0
+}
+
+/** How far the hero is toward opening the War, in XP. */
+export function warUnlockProgress(game: GameState): { earned: number; needed: number } {
+  return { earned: Math.min(Math.max(0, game.totalXp), WAR_UNLOCK_XP), needed: WAR_UNLOCK_XP }
 }
 
 /** Notes a rival as beaten, once. */
