@@ -146,3 +146,51 @@
   display: block;
   margin: 16px auto 0;
 }
+
+/* The hero's own quests, each with edit and remove */
+
+.own-quests {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.own-quests li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  background: var(--surface-raised);
+}
+
+.own-quests li.editing {
+  border-color: var(--ember);
+}
+
+.own-quest-text {
+  display: grid;
+  gap: 2px;
+}
+
+.own-quest-text span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.own-quest-actions,
+.own-quest-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.own-quest-confirm span {
+  flex-basis: 100%;
+  font-size: 14px;
+}

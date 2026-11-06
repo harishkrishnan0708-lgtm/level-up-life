@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import type { Hero } from './hero'
 import type { Player } from './online'
+import { TradeList, TradeOffer, type ChangeInventory } from './FriendTrades'
 import { describeRaidOnYou, normalizeRaidCode, rivalFromKingdom, snapshotOf, type KingdomSnapshot, type RaidReport } from './pvp'
+import { addItem, giverSettlement, itemName, type Trade } from './trades'
 import { WAR_UNLOCK_LEVEL, type RaidReadiness } from './raids'
 
 type Online = typeof import('./online')
@@ -11,10 +13,11 @@ interface FriendRaidsProps {
   /** Null while the War is still locked: the player can share their code and be raided, but can't march yet. */
   readiness: RaidReadiness | null
   onRaid: (ownerUid: string, kingdom: KingdomSnapshot) => void
+  onInventory: ChangeInventory
 }
 
 /** Raiding friends' kingdoms: sign in, share your code, find a friend's, and see who raided you. */
-function FriendRaids({ hero, readiness, onRaid }: FriendRaidsProps) {
+function FriendRaids({ hero, readiness, onRaid, onInventory }: FriendRaidsProps) {
   const [online, setOnline] = useState<Online | null>(null)
   const [player, setPlayer] = useState<Player | null | 'checking'>('checking')
   // Kept with the account they belong to, so signing out (or in as someone else) never shows the last player's.
@@ -22,11 +25,15 @@ function FriendRaids({ hero, readiness, onRaid }: FriendRaidsProps) {
   const [reportsFor, setReportsFor] = useState<{ uid: string; reports: RaidReport[] } | null>(null)
   const [typed, setTyped] = useState('')
   const [found, setFound] = useState<{ uid: string; kingdom: KingdomSnapshot } | null>(null)
+  const [tradesFor, setTradesFor] = useState<{ uid: string; incoming: Trade[]; outgoing: Trade[] } | null>(null)
+  const [tradeNews, setTradeNews] = useState<string[]>([])
+  const [tradesVersion, setTradesVersion] = useState(0)
   const [busy, setBusy] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const uid = player && player !== 'checking' ? player.uid : null
   const code = codeFor?.uid === uid ? codeFor.code : null
   const reports = reportsFor?.uid === uid ? reportsFor.reports : []
+  const trades = tradesFor?.uid === uid ? tradesFor : null
   const snapshotKey = useMemo(() => JSON.stringify(code ? snapshotOf(hero, code) : null), [hero, code])
 
   useEffect(() => {
@@ -62,6 +69,50 @@ function FriendRaids({ hero, readiness, onRaid }: FriendRaidsProps) {
       .then((found) => setReportsFor({ uid, reports: found }))
       .catch(() => setProblem('Couldn’t load raids on your kingdom.'))
   }, [online, uid])
+
+  // The trade loader always uses the latest inventory handler, without reloading trades every time it changes.
+  const inventory = useRef(onInventory)
+  useEffect(() => {
+    inventory.current = onInventory
+  })
+
+  // Loads trades, and finishes the giver's side of any a friend has answered: the swapped item arrives, or a declined
+  // or cancelled offer comes back. Each happens once, because the server marks it settled first.
+  useEffect(() => {
+    if (!online || !uid) {
+      return
+    }
+    let cancelled = false
+    const settle = async () => {
+      const found = await online.tradesFor(uid)
+      const news: string[] = []
+      for (const trade of found.outgoing) {
+        const step = giverSettlement(trade)
+        if (!step || cancelled || !(await online.settleTrade(trade.id))) {
+          continue
+        }
+        if (step === 'receive') {
+          if (trade.want) {
+            inventory.current((current) => addItem(current, trade.want!))
+          }
+          news.push(`${trade.toName} accepted your ${itemName(trade.give)}${trade.want ? `. You received ${itemName(trade.want)}.` : ' as a gift.'}`)
+        } else {
+          inventory.current((current) => addItem(current, trade.give))
+          news.push(`Your ${itemName(trade.give)} came back: the offer to ${trade.toName} was ${trade.status}.`)
+        }
+      }
+      if (!cancelled) {
+        setTradesFor({ uid, incoming: found.incoming, outgoing: found.outgoing.filter((trade) => !giverSettlement(trade)) })
+        if (news.length > 0) {
+          setTradeNews((earlier) => [...news, ...earlier])
+        }
+      }
+    }
+    settle().catch(() => setProblem('Couldn’t load your trades. Try again in a moment.'))
+    return () => {
+      cancelled = true
+    }
+  }, [online, uid, tradesVersion])
 
   useEffect(() => {
     // Keyed on the snapshot's contents, so a new object with the same contents doesn't publish again.
@@ -145,6 +196,16 @@ function FriendRaids({ hero, readiness, onRaid }: FriendRaidsProps) {
               </button>
             </div>
           </form>
+          {found && online && (
+            <TradeOffer
+              hero={hero}
+              online={online}
+              friendUid={found.uid}
+              friend={found.kingdom}
+              onInventory={onInventory}
+              onSent={() => setTradesVersion((version) => version + 1)}
+            />
+          )}
           {found && (
             <FoundKingdom
               kingdom={found.kingdom}
@@ -155,6 +216,24 @@ function FriendRaids({ hero, readiness, onRaid }: FriendRaidsProps) {
                 setFound(null)
                 setTyped('')
               }}
+            />
+          )}
+          {tradeNews.length > 0 && (
+            <ul className="trade-news" aria-live="polite">
+              {tradeNews.map((news) => (
+                <li key={news}>{news}</li>
+              ))}
+            </ul>
+          )}
+          {online && trades && (
+            <TradeList
+              hero={hero}
+              online={online}
+              incoming={trades.incoming}
+              outgoing={trades.outgoing}
+              onInventory={onInventory}
+              onChanged={() => setTradesVersion((version) => version + 1)}
+              onProblem={setProblem}
             />
           )}
           <h4>Raids on your kingdom</h4>

@@ -71,6 +71,7 @@ import {
 import QuestBoard from './QuestBoard'
 import WeekSummary from './WeekSummary'
 import { isPlayerRival, playerOf, rivalFromKingdom, type KingdomSnapshot } from './pvp'
+import type { Inventory } from './trades'
 
 type Screen = { kind: 'main' } | { kind: 'heroes' } | { kind: 'create' } | { kind: 'edit'; heroId: string } | { kind: 'plan' } | { kind: 'week' }
 
@@ -260,7 +261,7 @@ function App() {
     updateRoster(setHeroProgress(latestRoster.current, current.id, { game: updatedGame, pets: petOutcome.state, streak }))
 
     const xp = Math.abs(updatedGame.totalXp - current.game.totalXp)
-    const undoneCoins = quest.coins + (current.game.earnedBonusCoins?.[quest.id] ?? 0)
+    const undoneCoins = (current.game.earnedCoins?.[quest.id] ?? quest.coins) + (current.game.earnedBonusCoins?.[quest.id] ?? 0)
     showToast(wasDone ? `Undone: −${xp} XP · −${undoneCoins} coins` : `+${xp} XP · +${quest.coins + buildingCoins} coins`)
 
     const newCelebrations: Celebration[] = []
@@ -324,6 +325,17 @@ function App() {
         war: { ...current.war, lastRaidDay: toLocalDay(new Date()), activeSiege: siegeFor(current, rival, false, food) },
       }),
     )
+  }
+
+  /** Applies a trade to the active hero's pets and costumes; false if they no longer have what it needs. */
+  function handleInventory(change: (hero: Hero) => Inventory | null): boolean {
+    const current = activeHero(latestRoster.current)
+    const changed = current ? change(current) : null
+    if (!current || !changed) {
+      return false
+    }
+    updateRoster(setHeroProgress(latestRoster.current, current.id, changed))
+    return true
   }
 
   /** Marches on a friend's kingdom, using the day's raid like any other siege. */
@@ -628,6 +640,7 @@ function App() {
           testLuck={testLuck}
           onMarch={handleMarch}
           onRaidFriend={handleRaidFriend}
+          onInventory={handleInventory}
           onStartPractice={handleStartPractice}
           onSkipTraining={handleSkipTraining}
           onCoinCall={handleCoinCall}

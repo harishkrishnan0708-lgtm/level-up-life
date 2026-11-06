@@ -1,6 +1,7 @@
 import { levelProgress } from './game'
 import type { Hero } from './hero'
 import { mightBreakdown, totalMight, type Rival } from './raids'
+import { encodeItems, tradeableItems } from './trades'
 
 /**
  * Raiding friends' kingdoms. A player who signs in publishes a small snapshot of their kingdom; a friend with their
@@ -16,6 +17,8 @@ export interface KingdomSnapshot {
   might: number
   /** How many of each building they own, by id. */
   buildings: Record<string, number>
+  /** The pets and costume pieces they could trade, as "pet:id" and "gear:id". */
+  tradeables: string[]
 }
 
 /** Codes skip letters and digits that look alike, so they're easy to read out and type. */
@@ -39,6 +42,7 @@ export function snapshotOf(hero: Hero, code: string): KingdomSnapshot {
     level: levelProgress(hero.game.totalXp).level,
     might: totalMight(mightBreakdown(hero.game, hero.holdings, hero.pets)),
     buildings: { ...hero.holdings.buildings },
+    tradeables: encodeItems(tradeableItems(hero)),
   }
 }
 
@@ -114,7 +118,8 @@ export function isKingdomSnapshot(value: unknown): value is KingdomSnapshot {
     Number.isInteger(kingdom.might) &&
     typeof kingdom.buildings === 'object' &&
     kingdom.buildings !== null &&
-    Object.values(kingdom.buildings).every((owned) => Number.isInteger(owned) && (owned as number) >= 0)
+    Object.values(kingdom.buildings).every((owned) => Number.isInteger(owned) && (owned as number) >= 0) &&
+    (kingdom.tradeables === undefined || (Array.isArray(kingdom.tradeables) && kingdom.tradeables.every((item) => typeof item === 'string')))
   )
 }
 

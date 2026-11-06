@@ -797,3 +797,47 @@
   margin: 0 0 8px;
   padding-left: 18px;
 }
+
+/* Trading pets and costumes with friends */
+
+.trade-offer {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+}
+
+.trade-offer h4 {
+  margin: 0 0 4px;
+}
+
+.trade-list,
+.trade-news {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.trade-list li {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+}
+
+.trade-list strong {
+  color: var(--ember);
+}
+
+.trade-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.trade-news li {
+  color: var(--ember);
+  font-size: 14px;
+}

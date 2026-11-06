@@ -5,9 +5,13 @@ import {
   MAX_CUSTOM_QUESTS,
   addCustomQuest,
   allQuests,
+  editCustomQuest,
   isPerfectDay,
   newQuestPlan,
+  questDays,
   questsOn,
+  removeCustomQuest,
+  sanitizeQuestPlan,
   toggleQuestDay,
   weekdayOf,
   type QuestPlan,
@@ -74,5 +78,40 @@ describe('quests of your own', () => {
     roster = setHeroProgress(roster, activeHero(roster)!.id, { plan })
     saveRoster(storage, roster)
     expect(activeHero(loadRoster(storage, MONDAY))!.plan).toEqual(plan)
+  })
+})
+
+describe('changing quests of your own', () => {
+  const stretch = { name: 'Stretch for 10 minutes', category: 'healthy', size: 'small' } as const
+  const swim = { name: 'Swim laps', category: 'exercise', size: 'large' } as const
+  const twoQuests = addCustomQuest(addCustomQuest(newQuestPlan(), stretch), swim)
+
+  it('changes a quest’s name, kind, and reward, keeping its days', () => {
+    const offMondays = toggleQuestDay(twoQuests, 'custom-1', 1)
+    const edited = editCustomQuest(offMondays, 'custom-1', { name: 'Yoga', category: 'exercise', size: 'large' })
+    expect(edited.custom[0]).toMatchObject({ id: 'custom-1', name: 'Yoga', category: 'exercise', xp: 30, coins: 10 })
+    expect(questDays(edited, 'custom-1')).not.toContain(1)
+    expect(editCustomQuest(twoQuests, 'custom-1', { ...stretch, name: '  ' })).toBe(twoQuests)
+  })
+
+  it('removes a quest from every day and frees its slot', () => {
+    const removed = removeCustomQuest(toggleQuestDay(twoQuests, 'custom-1', 1), 'custom-1')
+    expect(removed.custom.map(({ name }) => name)).toEqual(['Swim laps'])
+    expect(removed.days['custom-1']).toBeUndefined()
+    expect(addCustomQuest(removed, { ...stretch, name: 'Plank' }).custom).toHaveLength(2)
+  })
+
+  it('keeps the other quests’ ids, and so their days, after a removal and a reload', () => {
+    const removed = removeCustomQuest(toggleQuestDay(twoQuests, 'custom-2', 3), 'custom-1')
+    const reloaded = sanitizeQuestPlan(JSON.parse(JSON.stringify(removed)))
+    expect(reloaded.custom.map(({ id, name }) => [id, name])).toEqual([['custom-2', 'Swim laps']])
+    expect(questDays(reloaded, 'custom-2')).not.toContain(3)
+  })
+
+  it('undoes a finished quest for what it paid, even if its reward changed since', () => {
+    const quests = allQuests(twoQuests)
+    const done = toggleQuest(newGame('2026-11-05'), 'custom-2', 'mage', 1, quests)
+    const cheaper = allQuests(editCustomQuest(twoQuests, 'custom-2', { ...swim, size: 'small' }))
+    expect(toggleQuest(done, 'custom-2', 'mage', 1, cheaper).coins).toBe(0)
   })
 })

@@ -62,6 +62,8 @@ export interface GameState {
   earnedXp?: Record<string, number>
   /** Extra coins each completed quest earned from buildings, so undo takes back the same amount even if a building was bought since. */
   earnedBonusCoins?: Record<string, number>
+  /** The quest's own coins each completed quest paid, so undo takes back the same amount even if its reward was changed since. */
+  earnedCoins?: Record<string, number>
 }
 
 export interface LevelProgress {
@@ -130,7 +132,7 @@ export function newGame(today: string): GameState {
 
 /** Quests reset each day; XP and coins are kept. */
 export function startDay(state: GameState, today: string): GameState {
-  return state.day === today ? state : { ...state, day: today, completedQuestIds: [], earnedXp: {}, earnedBonusCoins: {} }
+  return state.day === today ? state : { ...state, day: today, completedQuestIds: [], earnedXp: {}, earnedBonusCoins: {}, earnedCoins: {} }
 }
 
 /**
@@ -151,14 +153,16 @@ export function toggleQuest(
   }
   const { [questId]: previouslyEarned, ...otherEarnedXp } = state.earnedXp ?? {}
   const { [questId]: previousBonus, ...otherBonusCoins } = state.earnedBonusCoins ?? {}
+  const { [questId]: previousCoins, ...otherCoins } = state.earnedCoins ?? {}
   if (state.completedQuestIds.includes(questId)) {
     return {
       ...state,
       totalXp: Math.max(0, state.totalXp - (previouslyEarned ?? questXp(quest, heroClass))),
-      coins: Math.max(0, state.coins - quest.coins - (previousBonus ?? 0)),
+      coins: Math.max(0, state.coins - (previousCoins ?? quest.coins) - (previousBonus ?? 0)),
       completedQuestIds: state.completedQuestIds.filter((id) => id !== questId),
       earnedXp: otherEarnedXp,
       earnedBonusCoins: otherBonusCoins,
+      earnedCoins: otherCoins,
     }
   }
   const xp = Math.round(questXp(quest, heroClass) * xpMultiplier)
@@ -169,6 +173,7 @@ export function toggleQuest(
     completedQuestIds: [...state.completedQuestIds, questId],
     earnedXp: { ...otherEarnedXp, [questId]: xp },
     earnedBonusCoins: { ...otherBonusCoins, [questId]: bonusCoins },
+    earnedCoins: { ...otherCoins, [questId]: quest.coins },
   }
 }
 
@@ -192,6 +197,10 @@ export function isGameState(value: unknown): value is GameState {
     (candidate.earnedBonusCoins === undefined ||
       (typeof candidate.earnedBonusCoins === 'object' &&
         candidate.earnedBonusCoins !== null &&
-        Object.values(candidate.earnedBonusCoins).every((coins) => typeof coins === 'number')))
+        Object.values(candidate.earnedBonusCoins).every((coins) => typeof coins === 'number'))) &&
+    (candidate.earnedCoins === undefined ||
+      (typeof candidate.earnedCoins === 'object' &&
+        candidate.earnedCoins !== null &&
+        Object.values(candidate.earnedCoins).every((coins) => typeof coins === 'number')))
   )
 }

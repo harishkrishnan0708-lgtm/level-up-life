@@ -89,25 +89,50 @@ export interface NewQuest {
   size: RewardSize
 }
 
-/** Adds a quest of the hero's own, on every day to start with; returns the plan unchanged if it can't be added. */
-export function addCustomQuest(plan: QuestPlan, { name, category, size }: NewQuest): QuestPlan {
-  if (validateQuestName(name) || plan.custom.length >= MAX_CUSTOM_QUESTS) {
-    return plan
-  }
-  const used = new Set(plan.custom.map(({ id }) => id))
-  let number = 1
-  while (used.has(`custom-${number}`)) {
-    number++
-  }
-  const quest: Quest = {
-    id: `custom-${number}`,
+function customQuest(id: string, { name, category, size }: NewQuest): Quest {
+  return {
+    id,
     trial: category === 'exercise' ? 'A Trial of Your Own' : 'A Rite of Your Own',
     name: name.trim(),
     category,
     xp: REWARD_SIZES[size].xp,
     coins: REWARD_SIZES[size].coins,
   }
-  return { ...plan, custom: [...plan.custom, quest] }
+}
+
+/** The reward size a quest of the hero's own was made with. */
+export function rewardSizeOf(quest: Quest): RewardSize {
+  return (Object.keys(REWARD_SIZES) as RewardSize[]).find((key) => REWARD_SIZES[key].xp === quest.xp) ?? 'small'
+}
+
+/**
+ * Adds a quest of the hero's own, on every day to start with; returns the plan unchanged if it can't be added. Each
+ * keeps its id for good, so its days and today's progress stay with it when others are removed.
+ */
+export function addCustomQuest(plan: QuestPlan, quest: NewQuest, id?: string): QuestPlan {
+  const used = new Set(plan.custom.map((custom) => custom.id))
+  if (validateQuestName(quest.name) || plan.custom.length >= MAX_CUSTOM_QUESTS || (id !== undefined && used.has(id))) {
+    return plan
+  }
+  let number = 1
+  while (used.has(`custom-${number}`)) {
+    number++
+  }
+  return { ...plan, custom: [...plan.custom, customQuest(id ?? `custom-${number}`, quest)] }
+}
+
+/** Changes a quest of the hero's own, keeping its days; returns the plan unchanged if the change isn't valid. */
+export function editCustomQuest(plan: QuestPlan, questId: string, quest: NewQuest): QuestPlan {
+  if (validateQuestName(quest.name) || !plan.custom.some(({ id }) => id === questId)) {
+    return plan
+  }
+  return { ...plan, custom: plan.custom.map((custom) => (custom.id === questId ? customQuest(questId, quest) : custom)) }
+}
+
+/** Removes a quest of the hero's own from every day. The built-in quests can't be removed, only scheduled off. */
+export function removeCustomQuest(plan: QuestPlan, questId: string): QuestPlan {
+  const { [questId]: _removed, ...days } = plan.days
+  return { ...plan, custom: plan.custom.filter(({ id }) => id !== questId), days }
 }
 
 function isWeekday(value: unknown): value is Weekday {
@@ -124,9 +149,10 @@ export function sanitizeQuestPlan(value: unknown): QuestPlan {
   const savedCustom = Array.isArray(saved.custom) ? saved.custom : []
   for (const raw of savedCustom) {
     const quest = raw as Partial<Quest>
-    const size = (Object.keys(REWARD_SIZES) as RewardSize[]).find((key) => REWARD_SIZES[key].xp === quest.xp) ?? 'small'
     if (typeof quest.name === 'string' && (quest.category === 'exercise' || quest.category === 'healthy')) {
-      plan = addCustomQuest(plan, { name: quest.name, category: quest.category, size })
+      const keepsId = typeof quest.id === 'string' && /^custom-\d+$/.test(quest.id) && !plan.custom.some(({ id }) => id === quest.id)
+      const id = keepsId ? quest.id : undefined
+      plan = addCustomQuest(plan, { name: quest.name, category: quest.category, size: rewardSizeOf(quest as Quest) }, id)
     }
   }
   const known = new Set(allQuests(plan).map(({ id }) => id))

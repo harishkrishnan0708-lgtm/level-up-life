@@ -15,8 +15,8 @@ import {
 } from './pvp'
 import { availableActions, sanitizeSiege, startSiege, takeAction, tossCoin } from './siege'
 
-const bare: KingdomSnapshot = { code: 'K7Q2MX', name: 'Max', level: 2, might: 1, buildings: {} }
-const fortified: KingdomSnapshot = { code: 'K7Q2MX', name: 'Max', level: 12, might: 7, buildings: { wall: 6, watchtower: 4, keep: 1, tent: 3 } }
+const bare: KingdomSnapshot = { code: 'K7Q2MX', name: 'Max', level: 2, might: 1, buildings: {}, tradeables: [] }
+const fortified: KingdomSnapshot = { code: 'K7Q2MX', name: 'Max', level: 12, might: 7, buildings: { wall: 6, watchtower: 4, keep: 1, tent: 3 }, tradeables: [] }
 
 describe('raid codes', () => {
   it('are six easy-to-read characters, and typing one is forgiving', () => {
@@ -58,10 +58,10 @@ describe('a friend’s kingdom as a castle', () => {
 })
 
 describe('what a player shares', () => {
-  it('is their name, level, might, and buildings, and nothing about their habits', () => {
+  it('is their name, level, might, buildings, and tradeable items, and nothing about their habits', () => {
     const hero = activeHero(addHero(EMPTY_ROSTER, { ...newHeroDraft(), name: 'Harish' }, newGame('2026-11-05')))!
     const shared = snapshotOf(hero, 'K7Q2MX')
-    expect(Object.keys(shared).sort()).toEqual(['buildings', 'code', 'level', 'might', 'name'])
+    expect(Object.keys(shared).sort()).toEqual(['buildings', 'code', 'level', 'might', 'name', 'tradeables'])
     expect(isKingdomSnapshot(shared)).toBe(true)
     expect(isKingdomSnapshot({ ...shared, level: 'high' })).toBe(false)
   })

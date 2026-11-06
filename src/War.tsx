@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Chronicle from './Chronicle'
 import FriendRaids from './FriendRaids'
+import type { ChangeInventory } from './FriendTrades'
 import type { KingdomSnapshot } from './pvp'
 import Emblem from './Emblem'
 import './War.css'
@@ -29,7 +30,7 @@ function CrestSprite({ rivalId }: { rivalId: string }) {
 }
 
 /** What a new hero sees on the War tab before it opens: what's coming, and how close they are. */
-function WarLocked({ hero, onRaidFriend }: { hero: Hero; onRaidFriend: (ownerUid: string, kingdom: KingdomSnapshot) => void }) {
+function WarLocked({ hero, onRaidFriend, onInventory }: { hero: Hero; onRaidFriend: (ownerUid: string, kingdom: KingdomSnapshot) => void; onInventory: ChangeInventory }) {
   const { earned, needed } = warUnlockProgress(hero.game)
   return (
     <div className="war">
@@ -52,7 +53,7 @@ function WarLocked({ hero, onRaidFriend }: { hero: Hero; onRaidFriend: (ownerUid
           {earned} / {needed} XP · {needed - earned} XP to go
         </p>
       </section>
-      <FriendRaids hero={hero} readiness={null} onRaid={onRaidFriend} />
+      <FriendRaids hero={hero} readiness={null} onRaid={onRaidFriend} onInventory={onInventory} />
     </div>
   )
 }
@@ -65,6 +66,7 @@ interface WarProps {
   testLuck: boolean
   onMarch: (rivalId: string) => void
   onRaidFriend: (ownerUid: string, kingdom: KingdomSnapshot) => void
+  onInventory: ChangeInventory
   onStartPractice: () => void
   onSkipTraining: () => void
   onCoinCall: (call: CoinFace) => void
@@ -81,6 +83,7 @@ function War({
   testLuck,
   onMarch,
   onRaidFriend,
+  onInventory,
   onStartPractice,
   onSkipTraining,
   onCoinCall,
@@ -99,7 +102,7 @@ function War({
   const engines = startingEngines(hero.holdings)
 
   if (!warUnlocked(hero.game, hero.war)) {
-    return <WarLocked hero={hero} onRaidFriend={onRaidFriend} />
+    return <WarLocked hero={hero} onRaidFriend={onRaidFriend} onInventory={onInventory} />
   }
 
   if (hero.war.activeSiege) {
@@ -175,7 +178,7 @@ function War({
 
       <Chronicle hero={hero} onChoose={onStoryChoice} onFinish={onChapterRead} onRetakeFort={onStartPractice} />
 
-      <FriendRaids hero={hero} readiness={readiness} onRaid={onRaidFriend} />
+      <FriendRaids hero={hero} readiness={readiness} onRaid={onRaidFriend} onInventory={onInventory} />
 
       <section className="might-card">
         <p className="might-total">

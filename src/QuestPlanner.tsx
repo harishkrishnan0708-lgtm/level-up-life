@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import './QuestPlanner.css'
-import type { QuestCategory } from './game'
+import type { Quest, QuestCategory } from './game'
 import {
   MAX_CUSTOM_QUESTS,
   QUEST_NAME_MAX_LENGTH,
@@ -8,6 +8,9 @@ import {
   WEEK,
   addCustomQuest,
   allQuests,
+  editCustomQuest,
+  removeCustomQuest,
+  rewardSizeOf,
   questDays,
   toggleQuestDay,
   validateQuestName,
@@ -28,7 +31,27 @@ function QuestPlanner({ initialPlan, onSave, onCancel }: QuestPlannerProps) {
   const [category, setCategory] = useState<QuestCategory>('exercise')
   const [size, setSize] = useState<RewardSize>('medium')
   const [nameError, setNameError] = useState<string | null>(null)
+  /** The quest of the hero's own being changed in the form, or null while the form adds a new one. */
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [confirmingRemove, setConfirmingRemove] = useState<string | null>(null)
   const roomLeft = MAX_CUSTOM_QUESTS - plan.custom.length
+
+  function resetForm() {
+    setEditingId(null)
+    setName('')
+    setCategory('exercise')
+    setSize('medium')
+    setNameError(null)
+  }
+
+  function startEditing(quest: Quest) {
+    setEditingId(quest.id)
+    setName(quest.name)
+    setCategory(quest.category)
+    setSize(rewardSizeOf(quest))
+    setNameError(null)
+    setConfirmingRemove(null)
+  }
 
   function addQuest(event: FormEvent) {
     event.preventDefault()
@@ -37,8 +60,8 @@ function QuestPlanner({ initialPlan, onSave, onCancel }: QuestPlannerProps) {
     if (problem) {
       return
     }
-    setPlan(addCustomQuest(plan, { name, category, size }))
-    setName('')
+    setPlan(editingId ? editCustomQuest(plan, editingId, { name, category, size }) : addCustomQuest(plan, { name, category, size }))
+    resetForm()
   }
 
   return (
@@ -89,8 +112,55 @@ function QuestPlanner({ initialPlan, onSave, onCancel }: QuestPlannerProps) {
       </section>
 
       <section className="planner-card">
-        <h2>Add a quest of your own</h2>
-        {roomLeft > 0 ? (
+        {plan.custom.length > 0 && (
+          <>
+            <h2>Your quests</h2>
+            <ul className="own-quests">
+              {plan.custom.map((quest) => (
+                <li key={quest.id} className={editingId === quest.id ? 'editing' : undefined}>
+                  <span className="own-quest-text">
+                    <strong>{quest.name}</strong>
+                    <span>
+                      {quest.category === 'exercise' ? 'Body' : 'Restoration'} · {REWARD_SIZES[rewardSizeOf(quest)].label} reward
+                    </span>
+                  </span>
+                  {confirmingRemove === quest.id ? (
+                    <span className="own-quest-confirm">
+                      <span>Remove “{quest.name}” from every day of your week?</span>
+                      <button
+                        type="button"
+                        className="button-primary"
+                        onClick={() => {
+                          setPlan(removeCustomQuest(plan, quest.id))
+                          setConfirmingRemove(null)
+                          if (editingId === quest.id) {
+                            resetForm()
+                          }
+                        }}
+                      >
+                        Remove
+                      </button>
+                      <button type="button" className="button-secondary small" onClick={() => setConfirmingRemove(null)}>
+                        Keep it
+                      </button>
+                    </span>
+                  ) : (
+                    <span className="own-quest-actions">
+                      <button type="button" className="button-secondary small" onClick={() => startEditing(quest)}>
+                        Edit
+                      </button>
+                      <button type="button" className="button-secondary small" onClick={() => setConfirmingRemove(quest.id)}>
+                        Remove
+                      </button>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <h2>{editingId ? 'Change your quest' : 'Add a quest of your own'}</h2>
+        {roomLeft > 0 || editingId ? (
           <form className="quest-form" onSubmit={addQuest} noValidate>
             <label htmlFor="quest-name">What will you do?</label>
             <input
@@ -148,9 +218,20 @@ function QuestPlanner({ initialPlan, onSave, onCancel }: QuestPlannerProps) {
                 ))}
               </div>
             </fieldset>
-            <button type="submit" className="button-secondary">
-              + Add quest ({roomLeft} left)
-            </button>
+            {editingId ? (
+              <div className="plan-choices">
+                <button type="submit" className="button-primary">
+                  Save changes
+                </button>
+                <button type="button" className="button-secondary" onClick={resetForm}>
+                  Cancel changes
+                </button>
+              </div>
+            ) : (
+              <button type="submit" className="button-secondary">
+                + Add quest ({roomLeft} left)
+              </button>
+            )}
           </form>
         ) : (
           <p className="planner-hint">You’ve added {MAX_CUSTOM_QUESTS} quests of your own, the most a hero can carry.</p>
