@@ -109,6 +109,9 @@ export const CHARACTER_FACTS: Record<string, { who: Character; text: string }> =
   'holt-harrow': { who: 'holt', text: 'Carried the old king’s banner at Harrow Ford, and his shield at the very end.' },
   'holt-bird-son': { who: 'holt', text: 'Says his son carved the little bird, a long time ago.' },
   'holt-walks': { who: 'holt', text: 'Goes walking at night “to check the sentries,” away from the sentry lines.' },
+  'brannoc-mark': { who: 'brannoc', text: 'Found a tiny moth on the old king’s last coin, under the king’s ear. Even the old king was paid by the Moth.' },
+  'brannoc-debt-paid': { who: 'brannoc', text: 'Led the Salt Road Company, and fed the Moth a false report to repay what he owed you.' },
+  'brannoc-coin-sold': { who: 'brannoc', text: 'A soft-voiced trader bought his coin from the hangman, and paid in fresh gold.' },
 }
 
 export const SPEAKER_NAMES: Record<Exclude<Speaker, 'narrator' | 'hero'>, string> = {

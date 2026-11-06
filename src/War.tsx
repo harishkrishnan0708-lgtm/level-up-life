@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react'
 import Chronicle from './Chronicle'
+import FriendRaids from './FriendRaids'
+import type { KingdomSnapshot } from './pvp'
 import Emblem from './Emblem'
 import './War.css'
 import { paintCrest } from './crestSprites'
 import { questsOn } from './questPlan'
 import type { Hero } from './hero'
 import PixelArt from './PixelArt'
-import { PRACTICE_RIVAL, RIVALS, WAR_UNLOCK_LEVEL, mightBreakdown, raidReadiness, rivalById, scoutAccuracy, startingEngines, totalMight, warUnlockProgress, warUnlocked, type Rival } from './raids'
+import { PRACTICE_RIVAL, WAR_UNLOCK_LEVEL, mightBreakdown, raidReadiness, rivalsInPlay, scoutAccuracy, startingEngines, totalMight, warUnlockProgress, warUnlocked, type Rival } from './raids'
 import { spoilsClue } from './clues'
 import { COACH_NAME, coachAdvice } from './coach'
 import { NUMBERS_GUIDE, ORDER_GUIDE, PHASE_GUIDE, orderTabs, type OrderCategory } from './orderGuide'
-import { EVENT_TEXT, PHASES, availableActions, eventChoices, isNewOrder, type CoinFace, type Phase, type Siege, type SiegeAction } from './siege'
+import { EVENT_TEXT, PHASES, availableActions, eventChoices, isNewOrder, siegeRival, type CoinFace, type Phase, type Siege, type SiegeAction } from './siege'
 
 /** A rival's insignia: a pixel shield in a blood-red frame. */
 function crest(rival: Rival) {
@@ -61,6 +63,7 @@ interface WarProps {
   today: string
   testLuck: boolean
   onMarch: (rivalId: string) => void
+  onRaidFriend: (ownerUid: string, kingdom: KingdomSnapshot) => void
   onStartPractice: () => void
   onSkipTraining: () => void
   onCoinCall: (call: CoinFace) => void
@@ -76,6 +79,7 @@ function War({
   today,
   testLuck,
   onMarch,
+  onRaidFriend,
   onStartPractice,
   onSkipTraining,
   onCoinCall,
@@ -170,6 +174,8 @@ function War({
 
       <Chronicle hero={hero} onChoose={onStoryChoice} onFinish={onChapterRead} onRetakeFort={onStartPractice} />
 
+      <FriendRaids hero={hero} readiness={readiness} onRaid={onRaidFriend} />
+
       <section className="might-card">
         <p className="might-total">
           Your army <strong>{60 + 10 * might}</strong> soldiers
@@ -188,7 +194,7 @@ function War({
       </section>
 
       <ul className="rival-list">
-        {RIVALS.map((rival) => (
+        {rivalsInPlay(hero.story.read).map((rival) => (
           <li key={rival.id} className="rival-card">
             <span className="rival-icon" aria-hidden="true">
               {crest(rival)}
@@ -410,7 +416,7 @@ interface SiegeViewProps {
 function SiegeView({ siege, firstTime, coins, onCoinCall, onOrder, onEventChoice, onLeave }: SiegeViewProps) {
   const [confirmRetreat, setConfirmRetreat] = useState(false)
   const advice = siege.practice ? coachAdvice(siege) : null
-  const rival = rivalById(siege.rivalId)!
+  const rival = siegeRival(siege)
   const { army, estimates, flags } = siege
   const phaseIndex = PHASES.findIndex((phase) => phase.id === siege.phase)
   const recentLog = [...siege.log].reverse()

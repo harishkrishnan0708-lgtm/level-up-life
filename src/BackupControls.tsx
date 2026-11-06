@@ -22,7 +22,7 @@ function BackupControls({ roster, today, onRestore }: BackupControlsProps) {
     // On phones the share sheet can save straight to Files, Notes, or another device.
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: 'Level Up Life backup' })
+        await navigator.share({ files: [file], title: 'MyFantasyHeroJourney backup' })
         setStatus({ kind: 'done', message: 'Backup saved. Keep that file somewhere safe.' })
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {

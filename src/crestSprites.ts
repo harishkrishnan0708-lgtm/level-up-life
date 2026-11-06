@@ -91,10 +91,21 @@ function oldFort(grid: PixelGrid): void {
   grid.set(11, 20, GOLD.base)
 }
 
+/** The Salt Road Company: a white road running to a gold toll coin. */
+function saltRoad(grid: PixelGrid): void {
+  shield(grid, { light: '#a88a5a', base: '#7e6238', dark: '#50401f' })
+  grid.polygon([[9, 20], [15, 20], [13, 11], [11, 11]], BONE.light)
+  grid.line(12, 13, 12, 14, BONE.dark)
+  grid.line(12, 17, 12, 18, BONE.dark)
+  grid.ellipse(12, 7.5, 3.6, 3.6, litFromLeft(GOLD, 12, 3.6))
+  grid.rect(12, 6, 12, 9, GOLD.dark)
+}
+
 const PAINTERS: Record<string, (grid: PixelGrid) => void> = {
   mordrake,
   witch,
   gorrak,
+  'salt-road': saltRoad,
   'old-fort': oldFort,
 }
 

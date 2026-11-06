@@ -737,3 +737,63 @@
     animation: none;
   }
 }
+
+/* Raiding friends' kingdoms */
+
+.friend-raids {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+}
+
+.friend-raids h3 {
+  margin: 0 0 8px;
+}
+
+.friend-raids h4 {
+  margin: 16px 0 6px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.friend-hint {
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.friend-code strong {
+  margin-left: 6px;
+  color: var(--ember);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+}
+
+.friend-find label {
+  display: block;
+  margin: 12px 0 4px;
+}
+
+.friend-find-row {
+  display: flex;
+  gap: 8px;
+}
+
+.friend-find-row .text-input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+}
+
+.friend-kingdom {
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.raid-reports {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}

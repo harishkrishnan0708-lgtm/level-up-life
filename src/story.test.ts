@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { meets, newCastState, type CastState } from './cast'
 import { newGame } from './game'
 import { EMPTY_ROSTER, activeHero, addHero, loadRoster, newHeroDraft, saveRoster, setHeroProgress } from './hero'
-import { markBeaten, newWarRecord } from './raids'
+import { markBeaten, newWarRecord, rivalsInPlay } from './raids'
 import { sanitizeWarRecord } from './siege'
 import { CHAPTERS, castState, chapterScript, chapterStatus, chooseOption, markRead, newStoryState, stagingAt, storyScores, unlockHint } from './story'
 
@@ -240,4 +240,58 @@ it('lets someone who joins the hero during a chapter speak at its close', () => 
   const speaks = (choice: string) => chapterScript(steppe, choice).lines.some((line) => line.speaker === 'gorrak' && line.text.includes('slept so well'))
   expect(speaks('duel')).toBe(true)
   expect(speaks('disband')).toBe(false)
+})
+
+describe('Chapter 5, The Salt Road', () => {
+  const road = CHAPTERS.find(({ id }) => id === 'salt-road')!
+  const standing = (brannoc: 'ally' | 'free' | 'dead') => {
+    const fresh = newCastState()
+    return { ...fresh, brannoc: { ...fresh.brannoc, standing: brannoc } }
+  }
+  const script = (brannoc: 'ally' | 'free' | 'dead') => chapterScript(road, undefined, standing(brannoc)).lines.map(({ text }) => text).join(' ')
+  const offered = (brannoc: 'ally' | 'free' | 'dead') =>
+    road.choice!.options.filter((option) => !option.when || meets(option.when, standing(brannoc))).map(({ id }) => id)
+
+  it('follows the rest of the story, in Act II', () => {
+    expect(road.act).toBe(2)
+    expect(CHAPTERS[CHAPTERS.indexOf(road) - 1].id).toBe('red-steppe')
+    expect(rivalsInPlay([]).map(({ id }) => id)).not.toContain('salt-road')
+    expect(rivalsInPlay(['red-steppe']).map(({ id }) => id)).toContain('salt-road')
+  })
+
+  it('plays out differently depending on what happened to Brannoc in Chapter 1, with choices to match', () => {
+    expect(script('ally')).toContain('a tiny moth')
+    expect(script('free')).toContain('Unarmed, on roads like these')
+    expect(script('dead')).toContain('bought the Captain’s coin')
+    expect(offered('ally')).toEqual(['tell-army', 'keep-quiet'])
+    expect(offered('free')).toEqual(['enlist-late', 'let-go', 'law'])
+    expect(offered('dead')).toEqual(['free-twenty', 'chain-twenty'])
+  })
+
+  it('calls back to earlier chapters on every path: the sentry count, the handwriting, and Holt’s counting', () => {
+    for (const brannoc of ['ally', 'free', 'dead'] as const) {
+      const { lines } = chapterScript(road, offered(brannoc)[0], standing(brannoc))
+      const text = lines.map((line) => line.text).join(' ')
+      expect(text).toContain('Thirty-two sentries')
+      expect(text).toContain('Same hand as the Baron’s letters')
+      expect(text).toContain('Two hundred and fifty-nine')
+    }
+  })
+
+  it('sets up what comes next: the mint, the gate, a boy of nine, and Mordrake’s return', () => {
+    const closing = (mordrake: 'ally' | 'free' | 'dead') => {
+      const cast = { ...standing('ally'), mordrake: { ...newCastState().mordrake, standing: mordrake } }
+      return chapterScript(road, 'tell-army', cast).lines.map(({ text }) => text).join(' ')
+    }
+    expect(closing('ally')).toContain('A mint needs fire')
+    expect(closing('ally')).toContain('A good one opens quiet')
+    expect(closing('ally')).toContain('Nine, I’d say')
+    expect(closing('ally')).toContain('A moth has come')
+    expect(closing('free')).toContain('an old man on a good horse')
+    expect(closing('dead')).toContain('as the Baron told you')
+  })
+
+  it('never names Wick as the Moth', () => {
+    expect(road.mothClues!.join(' ')).not.toMatch(/wick|lantern|market/i)
+  })
 })

@@ -39,6 +39,8 @@ export interface Rival {
   orderTier: OrderTier
   /** The first moves this rival likes to make when they win the toss. */
   openingMoves: readonly OpeningMove[]
+  /** The chapter that has to be read before this rival appears at the war table, so later foes wait for their part of the story. */
+  appearsAfter?: string
 }
 
 export const RIVALS: readonly Rival[] = [
@@ -98,6 +100,26 @@ export const RIVALS: readonly Rival[] = [
     informantCost: 20,
     orderTier: 3,
     openingMoves: ['raid-supplies', 'spotted'],
+  },
+  {
+    id: 'salt-road',
+    name: 'The Salt Road Company',
+    title: 'Toll-takers of the Salt Road',
+    loot: 50,
+    reputation: 'They hold the old toll fort on the only road south, and every ambush lands on the right day. They always seem to know where your patrols will be.',
+    garrison: 100,
+    gate: 65,
+    walls: 65,
+    towers: 55,
+    morale: 75,
+    supplies: 18,
+    reliefDay: 12,
+    sallyChance: 0.35,
+    trapChance: 0.25,
+    informantCost: 20,
+    orderTier: 3,
+    openingMoves: ['raid-supplies', 'spotted'],
+    appearsAfter: 'red-steppe',
   },
 ]
 
@@ -188,6 +210,11 @@ export interface WarRecord {
 
 export function newWarRecord(): WarRecord {
   return { lastRaidDay: null, victories: 0, defeats: 0, stalemates: 0, activeSiege: null, trainingDone: false, beaten: [] }
+}
+
+/** The rivals the story has reached, given the chapters read so far. */
+export function rivalsInPlay(chaptersRead: readonly string[]): Rival[] {
+  return RIVALS.filter((rival) => !rival.appearsAfter || chaptersRead.includes(rival.appearsAfter))
 }
 
 /** The level the War opens at, so new players get used to their quests before they lead an army. */

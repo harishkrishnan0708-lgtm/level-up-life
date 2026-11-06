@@ -29,17 +29,17 @@ export type RestoreResult = { ok: true; roster: Roster; savedAt: string } | { ok
 /** Checks a backup file and rebuilds its heroes, or explains what's wrong with it. */
 export function readBackup(text: string, today: string): RestoreResult {
   if (text.length > MAX_BACKUP_BYTES) {
-    return { ok: false, problem: 'That file is far too big to be a Level Up Life backup.' }
+    return { ok: false, problem: 'That file is far too big to be a MyFantasyHeroJourney backup.' }
   }
   let parsed: unknown
   try {
     parsed = JSON.parse(text)
   } catch {
-    return { ok: false, problem: 'That file isn’t a Level Up Life backup. Pick the file you saved from this app.' }
+    return { ok: false, problem: 'That file isn’t a MyFantasyHeroJourney backup. Pick the file you saved from this app.' }
   }
   const backup = parsed as Partial<BackupFile> | null
   if (typeof backup !== 'object' || backup === null || backup.app !== BACKUP_APP) {
-    return { ok: false, problem: 'That file isn’t a Level Up Life backup. Pick the file you saved from this app.' }
+    return { ok: false, problem: 'That file isn’t a MyFantasyHeroJourney backup. Pick the file you saved from this app.' }
   }
   if (typeof backup.version !== 'number' || backup.version > BACKUP_VERSION) {
     return { ok: false, problem: 'That backup was made by a newer version of the app. Update the app, then try again.' }

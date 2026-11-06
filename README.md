@@ -1,4 +1,4 @@
-# Level Up Life
+# MyFantasyHeroJourney
 
 A gamified health app: complete daily quests for exercise (lifting, sports, walking) and healthy living (sleep, water, food, screen time) to earn XP and coins and level up your character.
 

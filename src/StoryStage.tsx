@@ -10,14 +10,31 @@ import type { Actor, SceneId, Speaker, Staging } from './story'
 import {
   CAMPFIRE,
   CELLAR_TORCHES,
+  DESERT_SAND,
+  DUNGEON_DRIPS,
   FEN_EMBERS,
   FORT_SMOKE,
   KEEP_SNOW,
+  GATE_EMBERS,
+  LAVA_GLOWS,
+  TOWN_LIGHTS,
+  WAR_TORCHES,
   SCENE_HEIGHT,
   SCENE_WIDTH,
   STEPPE_WIND,
   paintCampNight,
+  paintBoneDesert,
+  paintBurnedGate,
+  paintBurnedVillage,
   paintCinderFen,
+  paintDungeon,
+  paintElvenForest,
+  paintHarrowFord,
+  paintKeepCourtyard,
+  paintMothHill,
+  paintVolcanoFortress,
+  paintWarCircle,
+  paintSaltRoad,
   paintFortCellar,
   paintFortYard,
   paintKeepHall,
@@ -289,6 +306,113 @@ function SteppeLife() {
   )
 }
 
+function SaltRoadLife() {
+  return (
+    <>
+      <Glows spots={[[148, 92]]} color="#ffb060" size={6} />
+      <Birds flock={[[-10, 24, 36], [-24, 34, 46]]} color="#2a3a48" />
+    </>
+  )
+}
+
+function BurnedGateLife() {
+  return (
+    <>
+      <Glows spots={GATE_EMBERS} color="#ff7a2a" size={4} />
+      <Smoke />
+      <Birds flock={[[-10, 30, 42]]} color="#1a1020" />
+    </>
+  )
+}
+
+function HarrowFordLife() {
+  return (
+    <>
+      <Wind />
+      <Birds flock={[[-10, 26, 34], [-22, 36, 42], [-36, 20, 38]]} color="#22242a" />
+    </>
+  )
+}
+
+function KeepCourtyardLife() {
+  return (
+    <>
+      <Glows spots={[[99, 32]]} color="#ffd27a" size={7} />
+      <Snow />
+      <Birds flock={[[-10, 16, 40], [-30, 26, 48]]} color="#14161e" />
+    </>
+  )
+}
+
+function BurnedVillageLife() {
+  return (
+    <>
+      <Glows spots={[[16, 68], [144, 64]]} color="#ffb03a" size={7} />
+      <Embers />
+    </>
+  )
+}
+
+function MothHillLife() {
+  return (
+    <>
+      <Twinkles stars={[[14, 10], [58, 28], [104, 12], [132, 40], [186, 24], [78, 52]]} />
+      <Glows spots={TOWN_LIGHTS} color="#ffd27a" size={5} />
+      <Wanderers spots={[[44, 104], [80, 118], [116, 96], [140, 112], [160, 92]]} color="#e8e4f4" className="firefly" />
+    </>
+  )
+}
+
+function WarCircleLife() {
+  return (
+    <>
+      <Glows spots={WAR_TORCHES} color="#ffb03a" size={7} />
+      <Glows spots={[[100, 72]]} color="#ffc25a" size={14} />
+      <Wind />
+    </>
+  )
+}
+
+function DungeonLife() {
+  return (
+    <>
+      <Torches />
+      <Drips spots={DUNGEON_DRIPS} />
+    </>
+  )
+}
+
+function ElvenForestLife() {
+  return (
+    <>
+      <Glows spots={[[52, 49], [150, 45], [76, 31], [122, 29]]} color="#bff4e4" size={5} />
+      <Glows spots={[[38, 123], [164, 137], [150, 127]]} color="#5ae4f0" size={6} />
+      <Wanderers spots={[[44, 80], [70, 110], [120, 90], [150, 112], [96, 60], [180, 84]]} color="#e8f48a" className="firefly" />
+    </>
+  )
+}
+
+function VolcanoFortressLife() {
+  return (
+    <>
+      <Glows spots={LAVA_GLOWS} color="#ffb03a" size={9} />
+      <Embers />
+    </>
+  )
+}
+
+function BoneDesertLife() {
+  return (
+    <>
+      <Glows spots={[[146, 77]]} color="#ffb03a" size={5} />
+      <Birds flock={[[-10, 18, 40], [-26, 28, 48], [-40, 22, 44]]} color="#241418" />
+      {DESERT_SAND.map(([x, y], index) => (
+        <rect key={x} className="wind-seed" x={x} y={y} width={2} height={1} fill="#f8e0b0" style={{ animationDelay: `${-index * 0.7}s` }} />
+      ))}
+    </>
+  )
+}
+
 function CampNightLife() {
   return (
     <>
@@ -307,6 +431,17 @@ const SETTINGS = {
   'cinder-fen': { paint: paintCinderFen, Life: FenLife },
   'steppe-camp': { paint: paintSteppeCamp, Life: SteppeLife },
   'camp-night': { paint: paintCampNight, Life: CampNightLife },
+  'salt-road': { paint: paintSaltRoad, Life: SaltRoadLife },
+  dungeon: { paint: paintDungeon, Life: DungeonLife },
+  'burned-gate': { paint: paintBurnedGate, Life: BurnedGateLife },
+  'harrow-ford': { paint: paintHarrowFord, Life: HarrowFordLife },
+  'keep-courtyard': { paint: paintKeepCourtyard, Life: KeepCourtyardLife },
+  'burned-village': { paint: paintBurnedVillage, Life: BurnedVillageLife },
+  'moth-hill': { paint: paintMothHill, Life: MothHillLife },
+  'war-circle': { paint: paintWarCircle, Life: WarCircleLife },
+  'elven-forest': { paint: paintElvenForest, Life: ElvenForestLife },
+  'volcano-fortress': { paint: paintVolcanoFortress, Life: VolcanoFortressLife },
+  'bone-desert': { paint: paintBoneDesert, Life: BoneDesertLife },
 } as const
 
 function PaintedSetting({ scene }: { scene: Exclude<SceneId, 'market'> }) {

@@ -70,6 +70,7 @@ import {
 } from './hero'
 import QuestBoard from './QuestBoard'
 import WeekSummary from './WeekSummary'
+import { isPlayerRival, playerOf, rivalFromKingdom, type KingdomSnapshot } from './pvp'
 
 type Screen = { kind: 'main' } | { kind: 'heroes' } | { kind: 'create' } | { kind: 'edit'; heroId: string } | { kind: 'plan' } | { kind: 'week' }
 
@@ -325,6 +326,21 @@ function App() {
     )
   }
 
+  /** Marches on a friend's kingdom, using the day's raid like any other siege. */
+  function handleRaidFriend(ownerUid: string, kingdom: KingdomSnapshot) {
+    const current = activeHero(latestRoster.current)
+    if (!current) {
+      return
+    }
+    const { holdings, food } = packSiegeFood(current.holdings)
+    updateRoster(
+      setHeroProgress(latestRoster.current, current.id, {
+        holdings,
+        war: { ...current.war, lastRaidDay: toLocalDay(new Date()), activeSiege: siegeFor(current, rivalFromKingdom(kingdom, ownerUid), false, food) },
+      }),
+    )
+  }
+
   /** The practice siege doesn't use up the day's raid, so it can be played (or replayed) any time. */
   function handleStartPractice() {
     const current = activeHero(latestRoster.current)
@@ -374,8 +390,16 @@ function App() {
     if (next.outcome && !siege.outcome) {
       // Practice sieges pay their loot but don't count toward the war record; any win counts for the story.
       war = next.practice ? war : recordRaid(war, next.outcome.kind)
-      if (next.outcome.kind === 'victory') {
+      // A friend's kingdom isn't part of the story, so beating it opens no chapters.
+      if (next.outcome.kind === 'victory' && !isPlayerRival(next.rivalId)) {
         war = markBeaten(war, next.rivalId)
+      }
+      const defender = playerOf(next.rivalId)
+      if (defender) {
+        const outcome = next.outcome.kind
+        import('./online')
+          .then((online) => online.reportRaid(current.name, defender, outcome))
+          .catch(() => showToast('Couldn’t send the raid report to your friend'))
       }
       coins += next.outcome.loot
     }
@@ -564,7 +588,7 @@ function App() {
       {/* The journal is written at home, so it shares the kingdom's valley. */}
       <TabBackdrop tab={tab === 'journal' ? 'kingdom' : tab} />
       <nav className="top-bar">
-        <span className="app-name">Level Up Life</span>
+        <span className="app-name">MyFantasyHeroJourney</span>
         <button
           type="button"
           className="heroes-button sound-button"
@@ -603,6 +627,7 @@ function App() {
           today={today}
           testLuck={testLuck}
           onMarch={handleMarch}
+          onRaidFriend={handleRaidFriend}
           onStartPractice={handleStartPractice}
           onSkipTraining={handleSkipTraining}
           onCoinCall={handleCoinCall}

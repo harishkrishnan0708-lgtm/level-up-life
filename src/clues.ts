@@ -88,6 +88,7 @@ const SPOILS: Record<string, string> = {
   mordrake: 'Among the spoils: a ledger of payments to someone the Baron calls only “the Moth.”',
   witch: 'Among the spoils: casks of oil that never burns down, each sealed with a wax moth.',
   gorrak: 'Among the spoils: chests of fresh-minted gold, a moth pressed into every lid.',
+  'salt-road': 'Among the spoils: pay chests stamped with a moth, and a list of your own patrols in a neat, practised hand.',
 }
 
 export function spoilsClue(rivalId: string): string | null {

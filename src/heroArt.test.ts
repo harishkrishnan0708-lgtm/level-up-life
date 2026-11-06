@@ -23,6 +23,21 @@ import { paintPet } from './petSprites'
 import { PETS } from './pets'
 import { PixelGrid } from './pixel'
 import { PRACTICE_RIVAL, RIVALS } from './raids'
+import {
+  SCENE_HEIGHT,
+  SCENE_WIDTH,
+  paintBoneDesert,
+  paintBurnedGate,
+  paintBurnedVillage,
+  paintDungeon,
+  paintElvenForest,
+  paintHarrowFord,
+  paintKeepCourtyard,
+  paintMothHill,
+  paintSaltRoad,
+  paintVolcanoFortress,
+  paintWarCircle,
+} from './storyScenes'
 import { SHOP_ITEMS } from './wares'
 
 const OPTIONS: { [Key in keyof Appearance]: readonly Option[] } = {
@@ -201,4 +216,17 @@ describe('the night market', () => {
 
 it('draws the back of the hero differently from the front', () => {
   expect(fingerprint(paintHero(DEFAULT_APPEARANCE, 'back'))).not.toBe(fingerprint(paintHero(DEFAULT_APPEARANCE, 'front')))
+})
+
+describe('story backgrounds', () => {
+  const painters = { paintDungeon, paintElvenForest, paintVolcanoFortress, paintBoneDesert, paintSaltRoad, paintBurnedGate, paintHarrowFord, paintKeepCourtyard, paintBurnedVillage, paintMothHill, paintWarCircle }
+
+  it('fill the whole stage, and every place looks different', () => {
+    const scenes = Object.values(painters).map((paint) => paint())
+    for (const scene of scenes) {
+      expect([scene.width, scene.height]).toEqual([SCENE_WIDTH, SCENE_HEIGHT])
+      expect(scene.cells.every((cell) => cell !== null)).toBe(true)
+    }
+    expect(new Set(scenes.map(fingerprint)).size).toBe(scenes.length)
+  })
 })

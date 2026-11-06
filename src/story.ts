@@ -6,7 +6,7 @@ import { PRACTICE_RIVAL, rivalById, type WarRecord } from './raids'
 export type Speaker = 'narrator' | 'hero' | 'holt' | 'brannoc' | 'wick' | 'mordrake' | 'morwen' | 'gorrak'
 
 /** Where a scene takes place. */
-export type SceneId = 'fort-yard' | 'fort-cellar' | 'market' | 'keep-hall' | 'cinder-fen' | 'steppe-camp' | 'camp-night'
+export type SceneId = 'fort-yard' | 'fort-cellar' | 'market' | 'keep-hall' | 'cinder-fen' | 'steppe-camp' | 'camp-night' | 'salt-road' | 'dungeon' | 'elven-forest' | 'volcano-fortress' | 'bone-desert' | 'burned-gate' | 'harrow-ford' | 'keep-courtyard' | 'burned-village' | 'moth-hill' | 'war-circle'
 
 /** The characters who can stand on stage; the narrator never does. */
 export type Actor = Exclude<Speaker, 'narrator'>
@@ -218,7 +218,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'narrator',
         text: 'Holt lingers by the burned gate, turning a small carved bird over in his fingers, counting something under his breath. When he sees you looking, he tucks it away.',
-        scene: 'fort-yard',
+        scene: 'burned-gate',
         cast: ['holt'],
         poses: { holt: 'think' },
         moods: { holt: 'sad' },
@@ -311,7 +311,13 @@ export const CHAPTERS: readonly Chapter[] = [
           replies: [
             { speaker: 'hero', text: 'Tell me about Harrow Ford, then. The real version.', pose: 'talk', mood: 'happy' },
             { speaker: 'holt', text: 'Ha. The real version has more mud and fewer heroes. Pour, Captain, and I’ll tell it.', pose: 'talk', mood: 'happy' },
-            { speaker: 'narrator', text: 'He talks until the fire burns low. Not once does he mention the bird again.' },
+            {
+              speaker: 'narrator',
+              text: 'As he talks you can almost see it: rain, knee-deep mud, the river running red under a broken bridge, and the old king’s banner still flying in the current.',
+              scene: 'harrow-ford',
+              cast: [],
+            },
+            { speaker: 'narrator', text: 'He talks until the fire burns low. Not once does he mention the bird again.', scene: 'camp-night', cast: ['hero', 'holt'] },
           ],
         },
         {
@@ -522,6 +528,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'narrator',
         text: 'As you leave the hall, Holt slips one of the moth-sealed letters into his coat when he thinks no one is watching.',
+        scene: 'keep-courtyard',
         cast: ['holt'],
         poses: { holt: 'stand' },
       },
@@ -560,6 +567,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'narrator',
         text: 'You walk the last mile on foot. Your boots sink in ash, and here and there you pass the black shells of houses.',
+        scene: 'burned-village',
         cast: ['hero', 'holt'],
       },
       { speaker: 'holt', text: 'Forty-four huts on the old maps, Captain. I count one. The rest are ash.', pose: 'point', mood: 'sad' },
@@ -568,6 +576,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'narrator',
         text: 'The Ash Witch waits on the steps of that last hut, a glass jar of moths in her hand. She does not bow.',
+        scene: 'cinder-fen',
         cast: ['hero', 'morwen', 'holt'],
       },
       {
@@ -751,6 +760,7 @@ export const CHAPTERS: readonly Chapter[] = [
       {
         speaker: 'narrator',
         text: 'She uncorks a jar. A single moth climbs to the rim, hesitates, and flutters off toward the faint glow of town on the horizon.',
+        scene: 'moth-hill',
         when: { who: 'morwen', standing: ['ally'] },
       },
       {
@@ -783,7 +793,7 @@ export const CHAPTERS: readonly Chapter[] = [
               text: 'You follow at a distance, but he knows the dark better than you do. Somewhere among the trees, you lose him.',
               cast: ['hero'],
             },
-            { speaker: 'narrator', text: 'When you get back, he is already by the fire, as if he had never left.' },
+            { speaker: 'narrator', text: 'When you get back, he is already by the fire, as if he had never left.', scene: 'camp-night' },
             { speaker: 'holt', text: 'Sentries all present, Captain. Thirty-two.', cast: ['hero', 'holt'], pose: 'talk', mood: 'neutral' },
           ],
         },
@@ -816,7 +826,7 @@ export const CHAPTERS: readonly Chapter[] = [
         },
       ],
     },
-    closing: [{ speaker: 'narrator', text: 'At dawn, the army breaks camp and rides for the Red Steppe.', cast: [] }],
+    closing: [{ speaker: 'narrator', text: 'At dawn, the army breaks camp and rides for the Red Steppe.', scene: 'camp-night', cast: [] }],
     summary:
       'After a week of good days you couldn’t sleep, and saw Holt slip away from camp “to check the sentries”, walking away from the sentry lines, not toward them.',
     develops: [{ who: 'holt', learn: 'holt-walks' }],
@@ -924,6 +934,7 @@ export const CHAPTERS: readonly Chapter[] = [
             {
               speaker: 'narrator',
               text: 'A ring of riders gathers, drumming their saddles. Gorrak swings first, and the great axe hums past your ear.',
+              scene: 'war-circle',
             },
             { speaker: 'holt', text: 'Low, Captain! He leans when he swings!', pose: 'point', mood: 'surprised' },
             { speaker: 'narrator', text: 'It is short, loud, and brutal. When it’s over, Gorrak lies on his back in the grass, laughing at the sky.' },
@@ -1022,6 +1033,256 @@ export const CHAPTERS: readonly Chapter[] = [
       { who: 'gorrak', learn: 'gorrak-gold' },
       { who: 'holt', stage: 3, learn: 'holt-twenty' },
     ],
+  },
+  {
+    id: 'salt-road',
+    act: 2,
+    number: 5,
+    title: 'The Salt Road',
+    unlockedBy: 'salt-road',
+    opening: [
+      {
+        speaker: 'narrator',
+        text: 'The Salt Road runs white and straight across the flats. The old toll fort is yours now, and the Company’s banner lies in the dust.',
+        scene: 'salt-road',
+        cast: [],
+      },
+      {
+        speaker: 'holt',
+        text: 'Ninety-four prisoners, Captain. I counted twice. And not one of them looks surprised to see us.',
+        cast: ['hero', 'holt'],
+        pose: 'point',
+      },
+      { speaker: 'hero', text: 'Every ambush on this road landed on the right day. How did they keep finding our patrols?', pose: 'think' },
+      { speaker: 'narrator', text: 'In the Company’s strongbox: pay chests stamped with a moth, and one folded page.' },
+      { speaker: 'hero', text: '“Thirty-two sentries. Changed at moonrise. North side weakest.”', pose: 'think', mood: 'surprised' },
+      { speaker: 'holt', text: 'Same hand as the Baron’s letters, Captain. Neat. Practised. Somebody writes a great many letters.', pose: 'think' },
+      { speaker: 'hero', text: 'Thirty-two. That’s our number.', mood: 'stern' },
+      { speaker: 'holt', text: 'Aye. I ought to know. I’m the one who counts them.', pose: 'shrug', mood: 'neutral' },
+      { speaker: 'narrator', text: 'He looks at the page a moment longer than he needs to, then hands it back.' },
+      { speaker: 'hero', text: 'This pay still smells of the furnace.', pose: 'think' },
+      { speaker: 'holt', text: 'Then the furnace is close, Captain. A mint needs fire, water, and men who don’t talk. Find those, and you’ve found the Moth’s purse.', pose: 'point', mood: 'neutral' },
+      {
+        speaker: 'morwen',
+        text: 'I did tell you, conqueror. One of yours lies to you. Every single day.',
+        when: { who: 'morwen', standing: ['ally'] },
+        cast: ['hero', 'holt', 'morwen'],
+        pose: 'talk',
+        mood: 'stern',
+      },
+      {
+        speaker: 'holt',
+        text: 'And I told you to mind your tongue, witch.',
+        when: { who: 'morwen', standing: ['ally'] },
+        pose: 'arms-crossed',
+      },
+
+      {
+        speaker: 'narrator',
+        text: 'Brannoc has been quiet all morning. He sits on a pay chest, turning his old coin over and over, a fresh moth-stamped one in his other hand.',
+        when: { who: 'brannoc', standing: ['ally'] },
+        cast: ['hero', 'brannoc', 'holt'],
+      },
+      { speaker: 'brannoc', text: 'Captain. You’ve heard me talk about this coin. Last wage the old king ever paid me.', when: { who: 'brannoc', standing: ['ally'] }, mood: 'sad' },
+      { speaker: 'brannoc', text: 'Twenty years I’ve flipped it. Never once held it next to the Moth’s gold in good light.', when: { who: 'brannoc', standing: ['ally'] } },
+      { speaker: 'narrator', text: 'Worn nearly smooth, right under the old king’s ear: a tiny moth.', when: { who: 'brannoc', standing: ['ally'] } },
+      { speaker: 'holt', text: 'That’s not right. That coin came from the king’s own mint. I stood guard on it.', when: { who: 'brannoc', standing: ['ally'] }, pose: 'point', mood: 'surprised' },
+      { speaker: 'hero', text: 'Then the Moth was paying the old king too.', when: { who: 'brannoc', standing: ['ally'] }, pose: 'think' },
+      { speaker: 'brannoc', text: 'I told you that kind wants paying eventually. Never thought to ask who he’d been paying first.', when: { who: 'brannoc', standing: ['ally'] }, pose: 'shrug', mood: 'sad' },
+      { speaker: 'narrator', text: 'Holt says nothing. His hand has gone to the little bird at his belt.', when: { who: 'brannoc', standing: ['ally'] } },
+
+      {
+        speaker: 'narrator',
+        text: 'The prisoners shuffle aside. Their captain is a gaunt man with one ear, turning a battered coin in his bound fingers.',
+        when: { who: 'brannoc', standing: ['free'] },
+        cast: ['hero', 'brannoc', 'holt'],
+        poses: { brannoc: 'bound' },
+      },
+      { speaker: 'brannoc', text: '“Unarmed, on roads like these.” You remember saying that, {hero}? I do. Turns out a road gives you a sword, if you stand on it long enough.', when: { who: 'brannoc', standing: ['free'] }, mood: 'happy' },
+      { speaker: 'hero', text: 'You said you wouldn’t forget your debt.', when: { who: 'brannoc', standing: ['free'] }, pose: 'point', mood: 'stern' },
+      { speaker: 'brannoc', text: 'And I haven’t. The Moth’s people asked me where to hit you. I told them your north side was weakest. It’s your strongest. I checked.', when: { who: 'brannoc', standing: ['free'] }, mood: 'happy' },
+      { speaker: 'brannoc', text: 'That’s the debt, paid in full. Somebody else gave them the rest of that page.', when: { who: 'brannoc', standing: ['free'] }, mood: 'neutral' },
+      { speaker: 'holt', text: 'A bandit’s word, Captain. I’ve counted what those are worth.', when: { who: 'brannoc', standing: ['free'] }, pose: 'arms-crossed' },
+      { speaker: 'brannoc', text: 'So, {hero}. Second time you’ve had me in ropes. I’d flip you for it, but this time I think you might take the bet.', when: { who: 'brannoc', standing: ['free'] }, mood: 'happy' },
+
+      {
+        speaker: 'narrator',
+        text: 'Twenty prisoners stand apart from the rest, in the old king’s faded colours. Each has a length of rope knotted around his sword arm.',
+        when: { who: 'brannoc', standing: ['dead'] },
+      },
+      { speaker: 'narrator', text: '“He said to remember him when the Moth came to collect,” their sergeant says. “Has he come for you yet?”', when: { who: 'brannoc', standing: ['dead'] } },
+      { speaker: 'hero', text: 'Brannoc’s men. Where did you get all this steel?', when: { who: 'brannoc', standing: ['dead'] }, pose: 'think', mood: 'stern' },
+      { speaker: 'narrator', text: '“Same place as before. A soft-voiced trader. He bought the Captain’s coin from your hangman, too. Paid in fresh gold.”', when: { who: 'brannoc', standing: ['dead'] } },
+      { speaker: 'holt', text: 'A hard call, I said, Captain. It’s still hard. A coin’s a strange thing to buy off a dead man.', when: { who: 'brannoc', standing: ['dead'] }, pose: 'think', mood: 'sad' },
+    ],
+    choice: {
+      prompt: 'What do you do?',
+      options: [
+        {
+          id: 'tell-army',
+          label: 'Tell the army what the coin means',
+          effects: { trust: 1 },
+          when: { who: 'brannoc', standing: ['ally'] },
+          outcome: 'You told the army the old king’s gold bore the Moth’s mark.',
+          develops: [
+            { who: 'brannoc', bond: 1, learn: 'brannoc-mark' },
+            { who: 'holt', bond: -1 },
+          ],
+          replies: [
+            { speaker: 'hero', text: 'They fought for that king’s memory. They should know who was paying him.', cast: ['hero', 'brannoc', 'holt'], pose: 'talk' },
+            { speaker: 'brannoc', text: 'Won’t make you popular. Never stopped you yet.', pose: 'shrug', mood: 'happy' },
+            { speaker: 'holt', text: 'Forty years, Captain. Forty years, and you’ll say that to their faces. …As you say.', pose: 'arms-crossed', mood: 'sad' },
+          ],
+        },
+        {
+          id: 'keep-quiet',
+          label: 'Keep it between the three of you',
+          effects: {},
+          when: { who: 'brannoc', standing: ['ally'] },
+          outcome: 'You kept the mark on the old king’s coin a secret.',
+          develops: [
+            { who: 'brannoc', learn: 'brannoc-mark' },
+            { who: 'holt', bond: 1 },
+          ],
+          replies: [
+            { speaker: 'hero', text: 'Not a word. An army can only lose one king at a time.', cast: ['hero', 'brannoc', 'holt'], pose: 'stand' },
+            { speaker: 'holt', text: 'Thank you, Captain. Truly.', pose: 'hand-on-heart', mood: 'sad' },
+            { speaker: 'brannoc', text: 'Three people can keep a secret. I knew a man who said that. He’s dead, but he did say it.', pose: 'shrug', mood: 'happy' },
+          ],
+        },
+        {
+          id: 'enlist-late',
+          label: 'Offer him a place in your army',
+          effects: { mercy: 1 },
+          ally: 'brannoc',
+          when: { who: 'brannoc', standing: ['free'] },
+          outcome: 'You took Brannoc into your army, the second time you held his life.',
+          develops: [
+            { who: 'brannoc', standing: 'ally', bond: 2, learn: 'brannoc-debt-paid' },
+            { who: 'holt', bond: -1 },
+          ],
+          replies: [
+            { speaker: 'hero', text: 'The debt’s paid. So here’s a new one. March with me.', cast: ['hero', 'brannoc', 'holt'], pose: 'talk' },
+            { speaker: 'brannoc', text: 'Well. That’s the first time anyone’s offered me a second chance twice.', pose: 'hand-on-heart', poses: { brannoc: 'stand' }, moods: { brannoc: 'happy' } },
+            { speaker: 'holt', text: 'Ninety-five mouths, then. Wonderful. I’ll keep my good eye on him, Captain. Same one as last time.', pose: 'arms-crossed' },
+          ],
+        },
+        {
+          id: 'let-go',
+          label: 'Let him walk. The debt is paid',
+          effects: {},
+          when: { who: 'brannoc', standing: ['free'] },
+          outcome: 'You let Brannoc walk free again, his debt paid.',
+          develops: [{ who: 'brannoc', bond: 1, learn: 'brannoc-debt-paid' }],
+          replies: [
+            { speaker: 'hero', text: 'Paid in full, you said. Then we’re even. Get off my road.', cast: ['hero', 'brannoc', 'holt'], pose: 'point' },
+            { speaker: 'brannoc', text: 'Even. There’s a word I’ve never had much use for. Mind that page, {hero}. It wasn’t me.', pose: 'shrug', poses: { brannoc: 'stand' }, mood: 'neutral' },
+          ],
+        },
+        {
+          id: 'law',
+          label: 'Hand him over to the law at last',
+          effects: { mercy: -1 },
+          when: { who: 'brannoc', standing: ['free'] },
+          outcome: 'You handed Brannoc over to the law.',
+          develops: [
+            { who: 'brannoc', standing: 'dead', learn: 'brannoc-debt-paid' },
+            { who: 'holt', bond: 1 },
+          ],
+          replies: [
+            { speaker: 'hero', text: 'I warned you I wouldn’t be this kind twice.', cast: ['hero', 'brannoc', 'holt'], pose: 'arms-crossed', mood: 'stern' },
+            { speaker: 'brannoc', text: 'So you did. Keep the coin, {hero}. Heads you were right. Tails you’ll find out.', pose: 'fist', mood: 'sad' },
+          ],
+        },
+        {
+          id: 'free-twenty',
+          label: 'Free the twenty. Enough rope',
+          effects: { mercy: 1 },
+          when: { who: 'brannoc', standing: ['dead'] },
+          outcome: 'You freed the twenty men who once followed Brannoc.',
+          develops: [{ who: 'brannoc', learn: 'brannoc-coin-sold' }],
+          replies: [
+            { speaker: 'hero', text: 'Cut those ropes. Go home, all of you. There’s been enough hanging.', cast: ['hero', 'holt'], pose: 'talk', mood: 'sad' },
+            { speaker: 'holt', text: 'They won’t thank you, Captain. But I’ll write it down.', pose: 'shrug', mood: 'neutral' },
+          ],
+        },
+        {
+          id: 'chain-twenty',
+          label: 'Keep them in chains',
+          effects: { mercy: -1 },
+          when: { who: 'brannoc', standing: ['dead'] },
+          outcome: 'You kept Brannoc’s twenty men in chains.',
+          develops: [
+            { who: 'brannoc', learn: 'brannoc-coin-sold' },
+            { who: 'holt', bond: 1 },
+          ],
+          replies: [
+            { speaker: 'hero', text: 'They chose this road twice. Chain them.', cast: ['hero', 'holt'], pose: 'arms-crossed', mood: 'stern' },
+            { speaker: 'holt', text: 'Twenty more to feed. The law’s the law, Captain.', pose: 'talk' },
+          ],
+        },
+      ],
+    },
+    closing: [
+      {
+        speaker: 'narrator',
+        text: 'On the road back, a boy of about nine runs beside your column selling twists of salt. Holt stops walking, and stares after him until he’s out of sight.',
+        cast: ['hero', 'holt'],
+      },
+      { speaker: 'hero', text: 'Someone you know?', pose: 'think' },
+      { speaker: 'holt', text: 'No, Captain. Nobody. Nine, I’d say. About nine.', pose: 'stand', mood: 'sad' },
+      { speaker: 'narrator', text: 'That night you double the guard on the north side, and change the watch at dusk instead of moonrise. Nobody but your officers is told.', cast: [] },
+      {
+        speaker: 'narrator',
+        text: 'You find Holt at your own gate after dark, an oil can in his hand, working each hinge in turn.',
+        cast: ['hero', 'holt'],
+        poses: { holt: 'think' },
+      },
+      { speaker: 'holt', text: 'A squealing gate wakes the whole camp, Captain. A good one opens quiet.', pose: 'shrug', mood: 'neutral' },
+      { speaker: 'narrator', text: 'He goes back to his hinges, lips moving.', cast: ['holt'] },
+      { speaker: 'holt', text: 'Two hundred and fifty-nine.', mood: 'neutral' },
+      {
+        speaker: 'narrator',
+        text: 'Morwen’s moths won’t settle tonight. Every one of them presses against the same side of the jar.',
+        when: { who: 'morwen', standing: ['ally'] },
+        cast: ['hero', 'morwen'],
+      },
+      {
+        speaker: 'morwen',
+        text: 'They’ve never been this eager. Whatever they’re flying toward, it’s close, and I don’t think it’s afraid of us.',
+        when: { who: 'morwen', standing: ['ally'] },
+        pose: 'think',
+        mood: 'stern',
+      },
+      {
+        speaker: 'narrator',
+        text: 'A rider comes in from the Grey Keep with a note in the Baron’s stiff hand. “A moth has come. I shall bring it to you myself.”',
+        when: { who: 'mordrake', standing: ['ally'] },
+        cast: [],
+      },
+      {
+        speaker: 'narrator',
+        text: 'Your scouts mention an old man on a good horse, asking the way to your camp. Very polite, they say. He had a crown’s worth of grievances and no crown.',
+        when: { who: 'mordrake', standing: ['free'] },
+        cast: [],
+      },
+      {
+        speaker: 'narrator',
+        text: 'You read the page once more, closely, as the Baron told you to before he died. At the very bottom, small and neat: “{hero}.”',
+        when: { who: 'mordrake', standing: ['dead'] },
+        cast: [],
+      },
+      { speaker: 'narrator', text: 'Salt wagons roll into the market again, and the square smells of the road.', scene: 'market', cast: [] },
+      { speaker: 'wick', text: 'The Salt Road open again, my friend! You can’t imagine the relief. I’d almost forgotten what it is to be paid on time.' },
+    ],
+    summary:
+      'You took the toll fort on the Salt Road. In the Company’s strongbox: moth-stamped pay, and a page in the Baron’s letter-writer’s hand listing your own sentries, thirty-two of them. Someone is counting for the Moth.',
+    mothClues: [
+      'Paid the Salt Road Company to hunt your patrols, and knew exactly where they would be.',
+      'Has a list of your own sentries, written in the same neat hand as Mordrake’s letters.',
+      'Someone close enough to count your sentries is telling the Moth the number.',
+    ],
+    develops: [{ who: 'holt', stage: 4 }],
   },
 ]
 

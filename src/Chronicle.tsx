@@ -55,7 +55,7 @@ function Chronicle({ hero, onChoose, onFinish, onRetakeFort }: ChronicleProps) {
         })}
       </ol>
       {firstLocked === -1 && statuses.every((status) => status === 'read') && (
-        <p className="chronicle-hint">That’s the end of Act {ROMAN_ACTS[CHAPTERS.at(-1)!.act]}. The next act is still being written.</p>
+        <p className="chronicle-hint">That’s everything so far in Act {ROMAN_ACTS[CHAPTERS.at(-1)!.act]}. The next chapter is still being written.</p>
       )}
       {reading && (
         <StoryReader

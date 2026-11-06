@@ -1,4 +1,5 @@
 import { rivalById, type OpeningMove, type OrderTier, type RaidOutcome, type Rival, type WarRecord } from './raids'
+import { isPlayerRival, isSavedFoe } from './pvp'
 
 export type Phase = 'approach' | 'encircle' | 'bombard' | 'assault' | 'keep'
 
@@ -83,6 +84,8 @@ export interface CoinToss {
 
 export interface Siege {
   rivalId: string
+  /** A castle built from a friend's kingdom, carried with the siege since it isn't one of the story's rivals. */
+  foe?: Rival
   /** The tutorial siege: it doesn't use up the day's raid or count toward the war record. */
   practice: boolean
   /** Null until the coin is tossed; no orders can be given before then. */
@@ -111,8 +114,13 @@ const clamp = (value: number, low: number, high: number) => Math.min(high, Math.
 /** Scales a value by a random factor between 1 - spread and 1 + spread. */
 const vary = (value: number, spread: number, random: Random) => value * (1 - spread + 2 * spread * random())
 
+/** The castle being besieged: one of the story's rivals, or a friend's kingdom. */
+export function siegeRival(siege: Siege): Rival {
+  return rivalOf(siege)
+}
+
 function rivalOf(siege: Siege): Rival {
-  const rival = rivalById(siege.rivalId)
+  const rival = siege.foe ?? rivalById(siege.rivalId)
   if (!rival) {
     throw new Error(`Unknown rival ${siege.rivalId}`)
   }
@@ -165,6 +173,7 @@ export function startSiege({ rival, might, accuracy, engines, practice = false, 
   }
   return {
     rivalId: rival.id,
+    ...(isPlayerRival(rival.id) ? { foe: rival } : {}),
     practice,
     coin: null,
     phase: 'approach',
@@ -913,7 +922,7 @@ export function sanitizeSiege(value: unknown): Siege | null {
   const saved = value as Record<string, unknown>
   const valid =
     typeof saved.rivalId === 'string' &&
-    rivalById(saved.rivalId) !== undefined &&
+    (rivalById(saved.rivalId) !== undefined || (isSavedFoe(saved.foe) && saved.foe.id === saved.rivalId)) &&
     typeof saved.practice === 'boolean' &&
     (saved.coin === null || (typeof saved.coin === 'object' && ['heads', 'tails'].includes((saved.coin as Record<string, unknown>).landed as string))) &&
     PHASES.some((phase) => phase.id === saved.phase) &&
