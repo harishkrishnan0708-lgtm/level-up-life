@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Hero } from './hero'
 import type { Player } from './online'
 import { describeRaidOnYou, normalizeRaidCode, rivalFromKingdom, snapshotOf, type KingdomSnapshot, type RaidReport } from './pvp'
-import type { RaidReadiness } from './raids'
+import { WAR_UNLOCK_LEVEL, type RaidReadiness } from './raids'
 
 type Online = typeof import('./online')
 
 interface FriendRaidsProps {
   hero: Hero
-  readiness: RaidReadiness
+  /** Null while the War is still locked: the player can share their code and be raided, but can't march yet. */
+  readiness: RaidReadiness | null
   onRaid: (ownerUid: string, kingdom: KingdomSnapshot) => void
 }
 
@@ -180,7 +181,7 @@ function FriendRaids({ hero, readiness, onRaid }: FriendRaidsProps) {
   )
 }
 
-function FoundKingdom({ kingdom, ownerUid, readiness, onRaid }: { kingdom: KingdomSnapshot; ownerUid: string; readiness: RaidReadiness; onRaid: () => void }) {
+function FoundKingdom({ kingdom, ownerUid, readiness, onRaid }: { kingdom: KingdomSnapshot; ownerUid: string; readiness: RaidReadiness | null; onRaid: () => void }) {
   const castle = rivalFromKingdom(kingdom, ownerUid)
   return (
     <div className="rival-card friend-kingdom">
@@ -196,7 +197,13 @@ function FoundKingdom({ kingdom, ownerUid, readiness, onRaid }: { kingdom: Kingd
         March
       </button>
       {readiness !== 'ready' && (
-        <p className="friend-hint">{readiness === 'already-raided' ? 'Your army already marched today.' : 'Finish today’s quests to march.'}</p>
+        <p className="friend-hint">
+          {readiness === null
+            ? `You can raid friends once the War opens at level ${WAR_UNLOCK_LEVEL}.`
+            : readiness === 'already-raided'
+              ? 'Your army already marched today.'
+              : 'Finish today’s quests to march.'}
+        </p>
       )}
     </div>
   )

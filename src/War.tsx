@@ -29,7 +29,7 @@ function CrestSprite({ rivalId }: { rivalId: string }) {
 }
 
 /** What a new hero sees on the War tab before it opens: what's coming, and how close they are. */
-function WarLocked({ hero }: { hero: Hero }) {
+function WarLocked({ hero, onRaidFriend }: { hero: Hero; onRaidFriend: (ownerUid: string, kingdom: KingdomSnapshot) => void }) {
   const { earned, needed } = warUnlockProgress(hero.game)
   return (
     <div className="war">
@@ -52,6 +52,7 @@ function WarLocked({ hero }: { hero: Hero }) {
           {earned} / {needed} XP · {needed - earned} XP to go
         </p>
       </section>
+      <FriendRaids hero={hero} readiness={null} onRaid={onRaidFriend} />
     </div>
   )
 }
@@ -98,7 +99,7 @@ function War({
   const engines = startingEngines(hero.holdings)
 
   if (!warUnlocked(hero.game, hero.war)) {
-    return <WarLocked hero={hero} />
+    return <WarLocked hero={hero} onRaidFriend={onRaidFriend} />
   }
 
   if (hero.war.activeSiege) {
